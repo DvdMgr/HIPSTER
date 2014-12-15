@@ -3,7 +3,7 @@ HIPSTER
 
 Huge
 Ignorant
-Protocol  (for)
+Protocol
 Short
 Time
 Expected
