@@ -6,7 +6,7 @@
 
 - SEQUENCE NUMBER and CODE are used for signalling
 
-0             15|16    26|27   32
+0             15|16    26|27   31
 |-------------------------------|
 |     DESTINATION IP (ipv4)     |
 |-------------------------------|
