@@ -19,6 +19,13 @@
 |                               |
 |-------------------------------|
 
+* DESTINATION IP:
+	If the dst IP is 22.2.19.92, then in the header byte[0]=22, byte[1]=2,
+	byte[2]=19, byte[3]=92
+* PORT:
+	The most significant byte is in byte[4], the least significant byte is
+	in byte[5]
+
 * CODE:
 
 	0 -> Regular data packet
