@@ -1,7 +1,7 @@
 clear all
 close all
 clc
-% compute message delivery time over L for HIPSTER protocol 
+% compute message delivery time over L for HIPSTER protocol
 %note that the computed times are average time as rand_dl is the average of
 %an exp distr
 
@@ -25,10 +25,19 @@ T_mat_HIP = k + (L + H)*8/R1 + number_packets.*(rand_dl + (L + 40)*8/R2).*(1 + P
 
 figure
 stem(L, T_mat_HIP)
+xlabel('Packet length [byte]');
+ylabel('Average delivery time for 10 MByte [s]');
+title('HIPSTER');
 figure
 stem(L, rand_dl)
+xlabel('Packet length [byte]');
+ylabel('Average of random delay at TC [s]');
+title('Random delay added at TC');
 figure
 stem(L, P_loss)
+title('Packet dropping probability at TC');
+xlabel('Packet length [byte]');
+ylabel('P_{loss} at TC');
 
 
 % compute message delivery time for simple stop and wait
@@ -38,3 +47,6 @@ t_oneack = (H)*8/R1 + tau1 + 1024/log(12)*10^-3 + tau2 + (H)*8/R2;
 T_mat_SW = number_packets.*(1./(1-P_loss)).*(t_onetx+t_oneack);
 figure
 stem(L, T_mat_SW)
+title('Simple SW');
+xlabel('Packet length [byte]');
+ylabel('Average delivery time for 10 MByte [s]');
