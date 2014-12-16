@@ -18,3 +18,9 @@
 |             DATA              |
 |                               |
 |-------------------------------|
+
+* CODE:
+
+	0 -> Regular data packet
+	1 -> ACK (sequence number is the same as the packet being ACKed)
+	2 -> ETX (End of Transmission)
