@@ -1,0 +1,20 @@
+- The channel needs to know the destination (address and port) for the packet
+  in order to forward it
+
+- The receiver needs to know the size of the payload. LENGTH is 10 bytes long
+  so the maximum payload length is 1024 Bytes
+
+- SEQUENCE NUMBER and CODE are used for signalling
+
+0             15|16    26|27   32
+|-------------------------------|
+|     DESTINATION IP (ipv4)     |
+|-------------------------------|
+|   DST PORT    | LENGTH | CODE |
+|-------------------------------|
+|        SEQUENCE NUMBER        |
+|-------------------------------|
+|                               |
+|             DATA              |
+|                               |
+|-------------------------------|
