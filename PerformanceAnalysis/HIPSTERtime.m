@@ -10,12 +10,13 @@ tau1 = 40*10^-3; %s
 tau2 = 100*10^-3; %s
 R1 = 7*10^6; %bit/s
 R2 = 2*10^6; %bit/s
-H = 20+8+12; %bytes
-M = 10*10^6; %bytes
+H_HIP = 12; %byte
+H = 20+8+H_HIP; %byte
+M = 10*10^6; %byte
 
-L = 100:100:1500; %bytes
-rand_dl = 1024./log(L).*10^-3; %average!! in s
-P_loss = 1 - exp(-L./1024);
+L = 100:100:1500; %byte
+rand_dl = 1024./log(L + H_HIP).*10^-3; %average!! in s
+P_loss = 1 - exp(-(L + H_HIP)./1024);
 number_packets = M./L;
 
 
