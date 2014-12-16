@@ -9,7 +9,7 @@ TODO:
 
 
 DONE:
-- ~~Create folders for Client, Channel and Server (Davide)~~
+- Create folders for Client, Channel and Server (Davide)
 - Performance analysis (Michele) first draft done
 - ~~Flow charts (Paolo)~~
 - ~~Define codes for the header (Paolo)~~
