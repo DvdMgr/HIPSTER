@@ -8,6 +8,7 @@ TODO:
 - Implement dummy Sender (sends a file through the socket without listening for ACKs)    DUE 2014-12-21
 - Implement dummy Channel (forwards each packet correctly to the receiver)               DUE 2014-12-21
 - Implement dummy Receiver (receives and reconstructs the file)                          DUE 2014-12-21
+- Consider using a checksum
 
 
 DONE:
