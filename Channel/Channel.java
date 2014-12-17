@@ -44,7 +44,7 @@ public class Channel {
   /*
   * Send the same payload as the received one to (fwAddr, fwPort)
   */
-  public void sendResponde()
+  public void forward()
   {
     try{
       toSend = received;
