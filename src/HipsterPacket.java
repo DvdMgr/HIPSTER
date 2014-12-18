@@ -194,7 +194,7 @@ public class HipsterPacket {
 		//First headerLength bytes are the header
 		System.arraycopy(this.getHeader(), 0, buffer, 0, headerLength);
 		//In bytes from headerlength to dataLength + headerLength there's the payload
-		System.arraycopy(payload, 0, buffer, headerLength, buffer.length);
+		System.arraycopy(payload, 0, buffer, headerLength, dataLength);
 		DatagramPacket pck = new DatagramPacket(buffer, buffer.length, destinationAddress, destinationPort);
 		return pck;
 	}
