@@ -9,7 +9,7 @@ public class DummySender {
     // Initialize the DatagramSocket
     DatagramSocket socket = new DatagramSocket();
 
-    String message = "Here is the message";
+    String message = args[0];
 
     byte[] data = message.getBytes();
 
