@@ -1,27 +1,66 @@
-import java.net.*; // Sockets and Datagram utils
+import java.net.*;    // Sockets and Datagram utils
+import java.util.*;   // Maps and useful stuff
 
+// TODO Clarify addresses and ports for the channel and the source.
 public class Receiver {
 
-  static int listeningPort = 65433;
-  static final int MAXIMUM_DATAGRAM_SIZE = 2048;    // Totally arbitrary "Big number"
+  static int listeningPort = 65433;                 // FIXME Magic numbers
+  static int sendingPort = 65432;
+  static final int MAXIMUM_DATAGRAM_SIZE = 2048;    // FIXME Totally arbitrary "Big number"
+  static InetAddress sourceAddress;                 // TODO Set these dynamically?
+  static InetAddress channelAddress;
 
   public static void main(String[] args) throws Exception { // TODO Refine Exception catching
 
-    // TODO put this whole method in a cycle to implement the algorithm
+    sourceAddress = InetAddress.getLocalHost(); // TODO We should use the actual address here
+    channelAddress = InetAddress.getLocalHost();
 
-    // Initialize the UDP socket, listening on the selected port
-    DatagramSocket socket = new DatagramSocket(listeningPort);
+    // Initialize the UDP sockets
+    DatagramSocket receiverSocket = new DatagramSocket(listeningPort);
+    DatagramSocket senderSocket = new DatagramSocket();
 
-    // Start listening for new data to arrive
-    DatagramPacket datagram = listenOnSocket(socket);
+    // Prepare the map that will be used to store the file
+    Map<Integer, byte[]> map = new TreeMap<Integer, byte[]>();
 
-    // TODO analyze the datagram via HipsterPacket
+    // Start executing the algorithm
+    boolean waitingForData = true;
 
-    System.out.println(new String(datagram.getData(), "UTF-8"));
+    while (waitingForData) {
+
+      // Start listening and wait for new data to arrive
+      DatagramPacket datagram = listenOnSocket(receiverSocket);
+
+      // Analyze the packet
+      HipsterPacket hipsterPacket = new HipsterPacket();
+      hipsterPacket = hipsterPacket.fromDatagram(datagram);
+      int sn = hipsterPacket.getSequenceNumber();
+      byte[] data = hipsterPacket.getPayload();
+
+      // Check whether the packet has the ETX flag
+      if (hipsterPacket.isEtx()) {
+        waitingForData = true;
+      }
+      else {
+        // Add the packet to the map using the SN as key
+        map.put(sn, data);
+      }
+
+      // Craft the ACK
+      DatagramPacket ack = craftAck(sn);
+      ack.setAddress(channelAddress);
+      ack.setPort(sendingPort);
+
+      // Send the ACK
+      senderSocket.send(ack);
+
+      System.out.println(new String(hipsterPacket.getPayload(), "UTF-8"));
+
+    }
+
+    // TODO Reassemble the file
 
     return;
   }
-
 
   /**
     * Listen on the selected socket and return a properly trimmed DatagramPacket.
@@ -47,6 +86,21 @@ public class Receiver {
     datagram.setData(trimmedData);
 
     return datagram;
+  }
+
+  /**
+    * This method creates an Hipster Ack using the specified sequence number.
+    */
+  private static DatagramPacket craftAck(int sequenceNumber) {
+
+    HipsterPacket hipster = new HipsterPacket();
+    hipster.setPayload(new byte[0]);                // Empty payload
+    hipster.setDestinationAddress(sourceAddress);
+    hipster.setDestinationPort(sendingPort);
+    hipster.setCode(HipsterPacket.ACK);
+    hipster.setSequenceNumber(sequenceNumber);
+
+    return hipster.toDatagram();
   }
 
 }
