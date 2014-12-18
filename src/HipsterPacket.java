@@ -23,8 +23,6 @@
  * For info about the packet structure see Documentation/packet_structure
  */
 
-package Utils;
-
 import java.net.*;
 import java.util.*;
 

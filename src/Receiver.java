@@ -1,5 +1,4 @@
 import java.net.*; // Sockets and Datagram utils
-import Utils.*;
 
 public class Receiver {
 
