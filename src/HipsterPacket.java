@@ -86,7 +86,7 @@ public class HipsterPacket {
 		//check that dataLength is equal to the length of the payload
 		//byte 6 and the first 2 msb of byte 7 are dataLength
 		//otherwise throw an exception
-		if(((buffer[6] << 2) + (buffer[7] >> 6) & 0x0003) == (buffer.length - headerLength)) {
+		if(((buffer[6] << 2) + ((buffer[7] >> 6) & 0x0003)) == (buffer.length - headerLength)) {
 			setPayload(Arrays.copyOfRange(buffer, headerLength, buffer.length));
 		}
 		else {
