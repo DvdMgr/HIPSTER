@@ -74,7 +74,7 @@ public class HipsterPacket {
 		}
 
 		//bytes 4 and 5 are port number
-		setDestinationPort((buffer[4] << 8) + buffer[5]);
+		setDestinationPort(((buffer[4] << 8) & 0xFF00) + (buffer[5] & 0xFF));
 
 		//bit the last 6 bits of byte 7 are code
 		setCode(buffer[7] & 0x3F);
