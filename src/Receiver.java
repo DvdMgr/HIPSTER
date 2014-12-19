@@ -48,10 +48,6 @@ public class Receiver {
       int sn = hipsterPacket.getSequenceNumber();
       byte[] data = hipsterPacket.getPayload();
 
-
-      System.out.println("Payload received " + new String(hipsterPacket.getPayload(), "UTF-8"));
-
-
       // Check whether the packet has the ETX flag
       if (hipsterPacket.isEtx()) {
         waitingForData = false;
