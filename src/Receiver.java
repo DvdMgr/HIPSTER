@@ -10,8 +10,8 @@ import java.util.*;   // Maps and useful stuff
 // TODO Clarify addresses and ports for the channel and the source.
 public class Receiver {
 
-  static int udpListenPort = 65433;                 // These two ports handle communication with the channel
-  static int udpSendPort = 65432;
+  static int udpListenPort = 65432;// 65433;                 // These two ports handle communication with the channel
+  static int udpSendPort = 65431;//65432;
 
   static int hipsterListenPort = 65433;              // These two ports handle communication with the sender
   static int hipsterSendPort = 65431;
@@ -63,7 +63,8 @@ public class Receiver {
       HipsterPacket hip = new HipsterPacket();
       hip.fromDatagram(ack);
 
-      System.out.println(hip.getSequenceNumber());
+      System.out.println("Sequence number: " + hip.getSequenceNumber());
+      System.out.println("Port number: " + hip.getDestinationPort());
 
       ack.setAddress(channelAddress);
       ack.setPort(udpSendPort);
