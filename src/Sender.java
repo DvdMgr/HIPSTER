@@ -10,8 +10,10 @@ import java.util.Arrays;
 
 public class Sender {
 	private static final String USAGE = "USAGE:\n\t" + 
-		"sender -c channel_IP -d destination_IP:Port -p Port filename\n"
-		+ "Tell him something about default values";
+		"sender [-c channel_IP] [-d destination_IP:Port] [-p Port] input_file" +
+		"\n\nBy default all addresses are 'localhost'.\n" +
+		"The default port this program listens on is 3000.\n" +
+		"The default port for the receiver is 4000.";
 
 	private static final int CHANNEL_PORT = 65432;
 	private static final int PAYLOAD_SIZE = 512;
@@ -48,12 +50,7 @@ public class Sender {
 				// the current string is the source filename
 				fileName = args[i];
 			}
-		}
-		System.out.println("filename = " + fileName);
-		System.out.println("chAddress = " + chAddress);
-		System.out.println("dstAddress = " + dstAddress);
-		System.out.println("dstPort = " + dstPort);
-		System.out.println("myPort = " + myPort);
+		}		
 		// the input file must be valid
 		File inFile = new File(fileName);
 		if ((!inFile.isFile()) || (!inFile.canRead())) {
@@ -63,24 +60,35 @@ public class Sender {
 		}
 		// initialize some data that will be used later
 		UDPSock = new DatagramSocket(myPort);
-		InetSocketAddress dst = new InetSocketAddress(dstAddress,
-	                                          dstPort);
+		System.out.println("Listening on port: " + myPort);
+		InetSocketAddress dst = new InetSocketAddress(chAddress,
+	                                          CHANNEL_PORT);
+
 		FileInputStream inFstream = new FileInputStream(inFile);
 
 		byte[] buf = new byte[PAYLOAD_SIZE];
 		int read = inFstream.read(buf);
+		int sn = 0;
 		while (read >= 0) {
 			HipsterPacket pkt = new HipsterPacket();
 			pkt.setCode(HipsterPacket.DATA);
 			pkt.setPayload(Arrays.copyOf(buf, read));
-			pkt.setDestinationAddress(
-				InetAddress.getByName(dstAddress));	
+			pkt.setDestinationAddress(InetAddress.getByName(dstAddress));	
 			pkt.setDestinationPort(dstPort);
-			pkt.setSequenceNumber(42);
+			pkt.setSequenceNumber(sn);
+			++sn;
 
 			UDPSock.send(pkt.toDatagram());
 			read = inFstream.read(buf);
 		}
+		// send an ETX packet to close the connection
+		HipsterPacket pkt = new HipsterPacket();
+		pkt.setCode(HipsterPacket.ETX);
+		pkt.setDestinationAddress(InetAddress.getByName(dstAddress));	
+		pkt.setDestinationPort(dstPort);
+		pkt.setSequenceNumber(sn);
+		UDPSock.send(pkt.toDatagram());
+		// cleanup
 		inFstream.close();
   	}
 }
