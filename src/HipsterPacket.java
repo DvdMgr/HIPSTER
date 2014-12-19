@@ -201,15 +201,19 @@ public class HipsterPacket {
 		byte[] buffer = new byte[headerLength + dataLength];
 		//First headerLength bytes are the header
 		System.arraycopy(this.getHeader(), 0, buffer, 0, headerLength);
-		//In bytes from headerlength to dataLength + headerLength there's the payload
-		System.arraycopy(payload, 0, buffer, headerLength, dataLength);
+
+		if (dataLength > 0) // there's no point in copying a payload that 
+		{                   // does not exist.
+			//In bytes from headerLength to dataLength + headerLength there's the payload
+			System.arraycopy(payload, 0, buffer, headerLength, dataLength);
+		}
 		DatagramPacket pck = new DatagramPacket(buffer, buffer.length, destinationAddress, destinationPort);
 		return pck;
 	}
 
 	/**
-		* Returns a human readable representation of the HipsterDatagram
-		*/
+	* Returns a human readable representation of the HipsterDatagram
+	*/
 	public String toString() {
 		try {
 			String s = new String("Destination address: " + destinationAddress +
