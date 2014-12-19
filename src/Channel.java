@@ -1,5 +1,6 @@
 import java.net.*;
 import java.io.*;
+import java.util.*;
 
 public class Channel {
 
@@ -11,6 +12,8 @@ public class Channel {
   InetAddress fwAddr;
   int fwPort;
 
+  public static final int zanellaPort = 65432;
+
   /*
   * Constructor
   */
@@ -20,7 +23,7 @@ public class Channel {
   }
 
   /*
-  * Receive packets, extraxt from HIPSTER header the fwAddr and fwPort
+  * Receive packets, extraxt from header the fwAddr and fwPort
   */
   public void getRequest()
   {
@@ -29,8 +32,12 @@ public class Channel {
       DatagramPacket recPck = new DatagramPacket(received, buffSize);
       sock.receive(recPck);
       received = recPck.getData();
-      fwAddr = InetAddress.getByName(received[0] + "." + received[1] + "." + received[2] + "." + received[3]);
+      fwAddr = InetAddress.getByAddress(Arrays.copyOfRange(received, 0, 4));
       fwPort = twoBytesToInt(received[3], received[4]);
+    }
+    catch(UnknownHostException e)
+    {
+      System.err.println("Bad formatted ip address in packet");
     }
     catch(SocketException ex){
       System.err.println("SocketException in getRequest");
@@ -62,7 +69,20 @@ public class Channel {
 
   public static void main(String[] args) {
 
-    return;
+    try {
+      DatagramSocket listenSocket = new DatagramSocket(zanellaPort);
+      while(true) {
+        Channel chan = new Channel(listenSocket);
+        chan.getRequest();
+        chan.forward();
+      }
+    }
+    catch(SocketException e)
+    {
+      System.err.println("SocketException in main");
+    }
+
+
   }
 
   /*
