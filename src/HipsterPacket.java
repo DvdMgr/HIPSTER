@@ -201,6 +201,23 @@ public class HipsterPacket {
 		return pck;
 	}
 
+	/**
+		* Returns a human readable representation of the HipsterDatagram
+		*/
+	public String toString() {
+		try {
+			String s = new String("Destination address: " + destinationAddress +
+								"\n Destination port: " + destinationPort +
+								"\n Length: " + dataLength +
+								"\n Code: " + code +
+								"\n Sequence number: " + sequenceNumber +
+								"\n Data: " + new String(payload, "UTF-8"));
+			return s;
+		}
+		catch(Exception e)
+		{return "";}
+	}
+
 
 	/**
 	* Helper method, returns a byte[] which contains int i
