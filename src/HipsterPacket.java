@@ -33,6 +33,8 @@ public class HipsterPacket {
 	public static final int DATA = 0;
 	public static final int ACK  = 1;
 	public static final int ETX  = 2;
+	public static final int MIN_CODE = 0;
+	public static final int MAX_CODE = 2;
 	public static final int headerLength = 12;
 	public static final int byteMask = 0xFF;
 
@@ -152,7 +154,7 @@ public class HipsterPacket {
 	}
 
 	public void setCode(int newCode) throws IllegalArgumentException {
-		if(newCode < 0 || code > 2) {
+		if(newCode < MIN_CODE || code > MAX_CODE) {
 			throw new IllegalArgumentException();
 		}
 		code = newCode;
@@ -181,7 +183,7 @@ public class HipsterPacket {
 		header[7] = (byte) (lsLength + code);// & byteMask;
 		//bytes 8-11 are sequenceNumber
 		byte[] sn = toBytes(sequenceNumber);
-		System.arraycopy(ip, 0, header, 8, sn.length);
+		System.arraycopy(sn, 0, header, 8, sn.length);
 		return header;
 	}
 
