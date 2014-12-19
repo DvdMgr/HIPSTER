@@ -1,22 +1,33 @@
+/**
+* This Receiver only communicates with the channel. It needs to send datagrams that contain the Channel address in
+* the UDP header and the Source address in the Hipster header in order for the channel to correctly forward these to
+* the sender.
+*/
+
 import java.net.*;    // Sockets and Datagram utils
 import java.util.*;   // Maps and useful stuff
 
 // TODO Clarify addresses and ports for the channel and the source.
 public class Receiver {
 
-  static int listeningPort = 65433;                 // FIXME Magic numbers
-  static int sendingPort = 65432;
+  static int udpListenPort = 65433;                 // These two ports handle communication with the channel
+  static int udpSendPort = 65432;
+
+  static int hipsterListenPort = 65433;              // These two ports handle communication with the sender
+  static int hipsterSendPort = 65431;
+
   static final int MAXIMUM_DATAGRAM_SIZE = 2048;    // FIXME Totally arbitrary "Big number"
+
   static InetAddress sourceAddress;                 // TODO Set these dynamically?
   static InetAddress channelAddress;
 
   public static void main(String[] args) throws Exception { // TODO Refine Exception catching
 
-    sourceAddress = InetAddress.getLocalHost(); // TODO We should use the actual address here
+    sourceAddress = InetAddress.getLocalHost();     // TODO We should use the actual address here
     channelAddress = InetAddress.getLocalHost();
 
     // Initialize the UDP sockets
-    DatagramSocket receiverSocket = new DatagramSocket(listeningPort);
+    DatagramSocket receiverSocket = new DatagramSocket(udpListenPort);
     DatagramSocket senderSocket = new DatagramSocket();
 
     // Prepare the map that will be used to store the file
@@ -27,7 +38,7 @@ public class Receiver {
 
     while (waitingForData) {
 
-      // Start listening and wait for new data to arrive
+      // Listen and wait for new data to arrive
       DatagramPacket datagram = listenOnSocket(receiverSocket);
 
       // Analyze the packet
@@ -47,8 +58,15 @@ public class Receiver {
 
       // Craft the ACK
       DatagramPacket ack = craftAck(sn);
+
+      // TESTING FOR HIPSTERPACKET
+      HipsterPacket hip = new HipsterPacket();
+      hip.fromDatagram(ack);
+
+      System.out.println(hip.getSequenceNumber());
+
       ack.setAddress(channelAddress);
-      ack.setPort(sendingPort);
+      ack.setPort(udpSendPort);
 
       // Send the ACK
       senderSocket.send(ack);
@@ -58,6 +76,12 @@ public class Receiver {
     }
 
     // TODO Reassemble the file
+    for(Map.Entry<Integer,byte[]> entry : map.entrySet()) {
+      Integer key = entry.getKey();
+      byte[] value = entry.getValue();
+
+      System.out.println(key + " => " + value);
+    }
 
     return;
   }
@@ -95,8 +119,8 @@ public class Receiver {
 
     HipsterPacket hipster = new HipsterPacket();
     hipster.setPayload(new byte[0]);                // Empty payload
-    hipster.setDestinationAddress(sourceAddress);
-    hipster.setDestinationPort(sendingPort);
+    hipster.setDestinationAddress(sourceAddress);   // Source address
+    hipster.setDestinationPort(hipsterSendPort);    // Source port number
     hipster.setCode(HipsterPacket.ACK);
     hipster.setSequenceNumber(sequenceNumber);
 
