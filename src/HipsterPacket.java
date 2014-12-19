@@ -88,7 +88,9 @@ public class HipsterPacket {
 		//check that dataLength is equal to the length of the payload
 		//byte 6 and the first 2 msb of byte 7 are dataLength
 		//otherwise throw an exception
-		if(((buffer[6] << 2) + ((buffer[7] >> 6) & 0x0003)) == (buffer.length - headerLength)) {
+		int lengthAsInHeader = ((buffer[6] << 2) & 0x03FC) | ((buffer[7] >> 6) & 0x0003);
+		int realLength = buffer.length - headerLength;
+		if(lengthAsInHeader == realLength) {
 			setPayload(Arrays.copyOfRange(buffer, headerLength, buffer.length));
 		}
 		else {
@@ -126,6 +128,10 @@ public class HipsterPacket {
 
 	public boolean isEtx() {
 		return (code == ETX);
+	}
+
+	public int getCode() {
+		return code;
 	}
 
 	public int getSequenceNumber() {
@@ -177,10 +183,10 @@ public class HipsterPacket {
 		header[4] = (byte) (destinationPort >> 8); //& byteMask);
 		header[5] = (byte) destinationPort;// & byteMask;
 		//byte 6 is the eight most significant bits of dataLength
-		header[6] = (byte) (dataLength >> 2);// & byteMask;
+		header[6] = (byte) ((dataLength >> 2) & byteMask);
 		//byte 7 is the 2 remaining bits of dataLength and code
-		int lsLength = (dataLength << 6) & byteMask;
-		header[7] = (byte) (lsLength + code);// & byteMask;
+		int lsLength = (dataLength << 6) & 0xC0;
+		header[7] = (byte) (lsLength | (code & 0x3F));// & byteMask;
 		//bytes 8-11 are sequenceNumber
 		byte[] sn = toBytes(sequenceNumber);
 		System.arraycopy(sn, 0, header, 8, sn.length);

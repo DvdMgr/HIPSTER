@@ -47,6 +47,8 @@ public class Receiver {
       int sn = hipsterPacket.getSequenceNumber();
       byte[] data = hipsterPacket.getPayload();
 
+      System.out.println("Payload received " + new String(hipsterPacket.getPayload(), "UTF-8"));
+
       // Check whether the packet has the ETX flag
       if (hipsterPacket.isEtx()) {
         waitingForData = true;
@@ -63,15 +65,12 @@ public class Receiver {
       HipsterPacket hip = new HipsterPacket();
       hip.fromDatagram(ack);
 
-      System.out.println(hip.getSequenceNumber());
-
       ack.setAddress(channelAddress);
       ack.setPort(udpSendPort);
 
       // Send the ACK
       senderSocket.send(ack);
 
-      System.out.println(new String(hipsterPacket.getPayload(), "UTF-8"));
 
     }
 
@@ -106,7 +105,7 @@ public class Receiver {
     socket.receive(datagram);
 
     // Trim the data array
-    byte[] trimmedData = new String(datagram.getData(), datagram.getOffset(), datagram.getLength()).getBytes();
+    byte[] trimmedData = Arrays.copyOfRange(datagram.getData(), datagram.getOffset(), datagram.getLength());
     datagram.setData(trimmedData);
 
     return datagram;

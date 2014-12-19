@@ -1,4 +1,5 @@
 import java.net.*;  // Sockets and Datagram utils
+import java.util.*;
 
 // TODO This class needs to be cleaned up, commented and improved in a lot of ways.
 // TODO Experiment with multiple messages or files
@@ -33,14 +34,18 @@ public class DummySender {
     switch (code) {
       case 0:
         hipster.setCode(HipsterPacket.DATA);
+        break;
       case 1:
         hipster.setCode(HipsterPacket.ACK);
+        break;
       case 2:
         hipster.setCode(HipsterPacket.ETX);
+        break;
     }
     hipster.setSequenceNumber(sn);
 
     DatagramPacket datagram = hipster.toDatagram();
+
     datagram.setPort(channelPort);
     datagram.setAddress(localhost);
 
@@ -54,7 +59,7 @@ public class DummySender {
     socket.receive(receivedDatagram);
 
     // Trim the datagram
-    byte[] trimmedData = new String(receivedDatagram.getData(), receivedDatagram.getOffset(), receivedDatagram.getLength()).getBytes();
+    byte[] trimmedData = Arrays.copyOfRange(receivedDatagram.getData(), receivedDatagram.getOffset(), receivedDatagram.getLength());
     receivedDatagram.setData(trimmedData);
 
     // Analyze packet
@@ -62,11 +67,13 @@ public class DummySender {
     pck.fromDatagram(receivedDatagram);
 
     // Print packet info
+    System.out.println("Received ACK info");
     System.out.println(pck.getDestinationAddress());
     System.out.println(pck.getDestinationPort());
-    System.out.println(pck.isAck());
+    System.out.println("Is ack? " + pck.isAck());
+    System.out.println(pck.getCode());
     System.out.println(pck.getSequenceNumber());
-    System.out.println("Contents of the ACK: " + new String(pck.getPayload(), "UTF-8"));
+    System.out.println("Contents of the ACK (there shouldn't be any payload):" + new String(pck.getPayload(), "UTF-8"));
 
     return;
   }

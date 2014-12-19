@@ -7,7 +7,9 @@ import java.util.*;
 public class Channel {
 
   final int buffSize = 1024; //FIXME arbitrary "big number"
-  DatagramSocket sock;
+  DatagramSocket listenSock;
+  DatagramSocket forwardSock;
+
   byte[] received;
   byte[] toSend;
 
@@ -15,13 +17,16 @@ public class Channel {
   int fwPort;
 
   public static final int zanellaPort = 65432;
+  public static final int forwardPort = 50000;
+
 
   /*
   * Constructor
   */
-  Channel(DatagramSocket s)
+  Channel(DatagramSocket listen, DatagramSocket forward)
   {
-    sock = s;
+    listenSock = listen;
+    forwardSock = forward;
   }
 
   /*
@@ -32,25 +37,21 @@ public class Channel {
     try{
       received = new byte[buffSize];
       DatagramPacket recPck = new DatagramPacket(received, buffSize);
-      sock.receive(recPck);
+      listenSock.receive(recPck);
+      System.out.println("Packet received! from" + recPck.getPort());
       received = recPck.getData();
+
       fwAddr = InetAddress.getByAddress(Arrays.copyOfRange(received, 0, 4));
       fwPort = twoBytesToInt(received[4], received[5]);
-      System.out.println("before trim: " + new String(received, "UTF-8"));
-      //uncomment to enable trimming
-      //received = new String(received, recPck.getOffset(), recPck.getLength()).getBytes();
-      //recPck.setData(received);
+
+      toSend = Arrays.copyOfRange(received, recPck.getOffset(), recPck.getLength());
+      recPck.setData(toSend);
       recPck.setPort(fwPort);
       recPck.setAddress(fwAddr);
+      forwardSock.send(recPck);
+      System.out.println(new String(recPck.getData(), "UTF-8"));
+      System.out.println("Packet forwarded! to" + recPck.getPort());
 
-
-      // Print packet info
-      System.out.println(fwAddr.toString());
-      System.out.println(fwPort);
-      System.out.println("Contents of the packet: " + new String(received, "UTF-8"));
-
-    
-      sock.send(recPck);
     }
     catch(UnknownHostException e)
     {
@@ -65,33 +66,15 @@ public class Channel {
   }
 
 
-  /*
-  * Send the same payload as the received one to (fwAddr, fwPort)
-  *
-  public void forward()
-  {
-    try{
-      DatagramPacket sendPck = new DatagramPacket(received, received.length, fwAddr, fwPort);
-      sock.send(sendPck);
-    }
-    catch(SocketException ex){
-      System.err.println("SocketException in sendResponse");
-    }
-    catch(IOException ex){
-      System.err.println("IOException in sendResponse");
-    }
-  }
-  */
-
 
   public static void main(String[] args) {
 
     try {
       DatagramSocket listenSocket = new DatagramSocket(zanellaPort);
+      DatagramSocket forwardSocket = new DatagramSocket(forwardPort);
       while(true) {
-        Channel chan = new Channel(listenSocket);
+        Channel chan = new Channel(listenSocket, forwardSocket);
         chan.getRequest();
-        // chan.forward();
       }
     }
     catch(SocketException e)
