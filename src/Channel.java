@@ -2,9 +2,11 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 
+//TODO improve the overall quality
+//TODO add p_drop and delay
 public class Channel {
 
-  final int buffSize = 1024;
+  final int buffSize = 1024; //FIXME arbitrary "big number"
   DatagramSocket sock;
   byte[] received;
   byte[] toSend;
@@ -33,7 +35,22 @@ public class Channel {
       sock.receive(recPck);
       received = recPck.getData();
       fwAddr = InetAddress.getByAddress(Arrays.copyOfRange(received, 0, 4));
-      fwPort = twoBytesToInt(received[3], received[4]);
+      fwPort = twoBytesToInt(received[4], received[5]);
+      System.out.println("before trim: " + new String(received, "UTF-8"));
+      //uncomment to enable trimming
+      //received = new String(received, recPck.getOffset(), recPck.getLength()).getBytes();
+      //recPck.setData(received);
+      recPck.setPort(fwPort);
+      recPck.setAddress(fwAddr);
+
+
+      // Print packet info
+      System.out.println(fwAddr.toString());
+      System.out.println(fwPort);
+      System.out.println("Contents of the packet: " + new String(received, "UTF-8"));
+
+    
+      sock.send(recPck);
     }
     catch(UnknownHostException e)
     {
@@ -50,12 +67,11 @@ public class Channel {
 
   /*
   * Send the same payload as the received one to (fwAddr, fwPort)
-  */
+  *
   public void forward()
   {
     try{
-      toSend = received;
-      DatagramPacket sendPck = new DatagramPacket(toSend, buffSize, fwAddr, fwPort);
+      DatagramPacket sendPck = new DatagramPacket(received, received.length, fwAddr, fwPort);
       sock.send(sendPck);
     }
     catch(SocketException ex){
@@ -65,6 +81,7 @@ public class Channel {
       System.err.println("IOException in sendResponse");
     }
   }
+  */
 
 
   public static void main(String[] args) {
@@ -74,7 +91,7 @@ public class Channel {
       while(true) {
         Channel chan = new Channel(listenSocket);
         chan.getRequest();
-        chan.forward();
+        // chan.forward();
       }
     }
     catch(SocketException e)
@@ -92,7 +109,7 @@ public class Channel {
   * b2 the LS byte
   */
   private int twoBytesToInt(byte b1, byte b2) {
-    return (int) ((b1 << 8) | (b2 & 0xFF));
+    return (int) (((b1 << 8) & 0xFF00) | (b2 & 0xFF));
   }
 
 }
