@@ -10,8 +10,8 @@ import java.util.*;   // Maps and useful stuff
 // TODO Clarify addresses and ports for the channel and the source.
 public class Receiver {
 
-  static int udpListenPort = 65433;                 // These two ports handle communication with the channel
-  static int udpSendPort = 65432;
+  static int udpListenPort = 65433;// 65433;                 // These two ports handle communication with the channel
+  static int udpSendPort = 65431;//65432;
 
   static int hipsterListenPort = 65433;              // These two ports handle communication with the sender
   static int hipsterSendPort = 65431;
@@ -47,11 +47,13 @@ public class Receiver {
       int sn = hipsterPacket.getSequenceNumber();
       byte[] data = hipsterPacket.getPayload();
 
+
       System.out.println("Payload received " + new String(hipsterPacket.getPayload(), "UTF-8"));
+
 
       // Check whether the packet has the ETX flag
       if (hipsterPacket.isEtx()) {
-        waitingForData = true;
+        waitingForData = false;
       }
       else {
         // Add the packet to the map using the SN as key

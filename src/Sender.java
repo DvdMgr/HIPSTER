@@ -35,7 +35,11 @@ public class Sender {
 			} else if ("-d".equals(args[i])) {
 				// the next string is the destination address
 				i++;
-				dstAddress = args[i];
+				String[] sep = args[i].split(":");
+				dstAddress = sep[0];
+				if (sep.length > 1) {
+					dstPort = Integer.parseInt(sep[1]);
+				}
 			} else if ("-p".equals(args[i])) {	
 				// the next string is my port
 				i++;
@@ -55,6 +59,7 @@ public class Sender {
 		if ((!inFile.isFile()) || (!inFile.canRead())) {
 			System.out.println("Invalid input file: " + fileName + "\n");
 			System.out.println(USAGE);
+			return;
 		}
 		// initialize some data that will be used later
 		UDPSock = new DatagramSocket(myPort);
