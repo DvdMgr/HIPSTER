@@ -47,9 +47,11 @@ public class Receiver {
       int sn = hipsterPacket.getSequenceNumber();
       byte[] data = hipsterPacket.getPayload();
 
+      System.out.println(hipsterPacket.toString());
+
       // Check whether the packet has the ETX flag
       if (hipsterPacket.isEtx()) {
-        waitingForData = true;
+        waitingForData = false;
       }
       else {
         // Add the packet to the map using the SN as key
@@ -62,9 +64,6 @@ public class Receiver {
       // TESTING FOR HIPSTERPACKET
       HipsterPacket hip = new HipsterPacket();
       hip.fromDatagram(ack);
-
-      System.out.println("Sequence number: " + hip.getSequenceNumber());
-      System.out.println("Port number: " + hip.getDestinationPort());
 
       ack.setAddress(channelAddress);
       ack.setPort(udpSendPort);
