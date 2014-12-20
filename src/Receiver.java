@@ -6,6 +6,7 @@
 
 import java.net.*;    // Sockets and Datagram utils
 import java.util.*;   // Maps and useful stuff
+import java.io.*;
 
 // TODO Clarify addresses and ports for the channel and the source.
 public class Receiver {
@@ -47,10 +48,6 @@ public class Receiver {
       int sn = hipsterPacket.getSequenceNumber();
       byte[] data = hipsterPacket.getPayload();
 
-
-      System.out.println("Payload received " + new String(hipsterPacket.getPayload(), "UTF-8"));
-
-
       // Check whether the packet has the ETX flag
       if (hipsterPacket.isEtx()) {
         waitingForData = false;
@@ -62,27 +59,27 @@ public class Receiver {
 
       // Craft the ACK
       DatagramPacket ack = craftAck(sn);
-
-      // TESTING FOR HIPSTERPACKET
-      HipsterPacket hip = new HipsterPacket();
-      hip.fromDatagram(ack);
-
       ack.setAddress(channelAddress);
       ack.setPort(udpSendPort);
 
       // Send the ACK
       senderSocket.send(ack);
-
-
     }
 
     // TODO Reassemble the file
+    // We use ByteArrayOutputStream for testing
+    // Use FileOutputStream for real application (remember that memory is limited)
+
+    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+
     for(Map.Entry<Integer,byte[]> entry : map.entrySet()) {
       Integer key = entry.getKey();
       byte[] value = entry.getValue();
 
-      System.out.println(key + " => " + value);
+      stream.write(value, 0, value.length);
     }
+
+    System.out.println(stream.toString());
 
     return;
   }
