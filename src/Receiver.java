@@ -11,7 +11,7 @@ import java.util.*;   // Maps and useful stuff
 public class Receiver {
 
   static int udpListenPort = 65433;// 65433;                 // These two ports handle communication with the channel
-  static int udpSendPort = 65431;//65432;
+  static int udpSendPort = 65432;//65432;
 
   static int hipsterListenPort = 65433;              // These two ports handle communication with the sender
   static int hipsterSendPort = 65431;
