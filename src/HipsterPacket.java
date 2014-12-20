@@ -194,8 +194,11 @@ public class HipsterPacket {
 	}
 
 	/**
-	* Returns a DatagramPacket ready to be sent to (dst IP, dst port) of this HipsterPacket
-	* with a correctly formatted header and the payload of this HipsterPacket
+	* Returns a DatagramPacket with a correctly formatted header and
+	* the payload of this HipsterPacket.
+	* 
+	* NOTE: no destination address or port will be set. It has to be 
+	* specified manually later.
 	*/
 	public DatagramPacket toDatagram() {
 		byte[] buffer = new byte[headerLength + dataLength];
@@ -207,7 +210,7 @@ public class HipsterPacket {
 			//In bytes from headerLength to dataLength + headerLength there's the payload
 			System.arraycopy(payload, 0, buffer, headerLength, dataLength);
 		}
-		DatagramPacket pck = new DatagramPacket(buffer, buffer.length, destinationAddress, destinationPort);
+		DatagramPacket pck = new DatagramPacket(buffer, buffer.length);
 		return pck;
 	}
 

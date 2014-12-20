@@ -61,8 +61,7 @@ public class Sender {
 		// initialize some data that will be used later
 		UDPSock = new DatagramSocket(myPort);
 		System.out.println("Listening on port: " + myPort);
-		InetSocketAddress dst = new InetSocketAddress(chAddress,
-	                                          CHANNEL_PORT);
+		InetAddress channel = InetAddress.getByName(chAddress);
 
 		FileInputStream inFstream = new FileInputStream(inFile);
 
@@ -78,7 +77,11 @@ public class Sender {
 			pkt.setSequenceNumber(sn);
 			++sn;
 
-			UDPSock.send(pkt.toDatagram());
+			DatagramPacket datagram = pkt.toDatagram();
+			datagram.setAddress(channel);
+			datagram.setPort(CHANNEL_PORT);
+			UDPSock.send(datagram);
+
 			read = inFstream.read(buf);
 		}
 		// send an ETX packet to close the connection
@@ -87,7 +90,10 @@ public class Sender {
 		pkt.setDestinationAddress(InetAddress.getByName(dstAddress));	
 		pkt.setDestinationPort(dstPort);
 		pkt.setSequenceNumber(sn);
-		UDPSock.send(pkt.toDatagram());
+		DatagramPacket etx = pkt.toDatagram();
+		etx.setAddress(channel);
+		etx.setPort(CHANNEL_PORT);
+		UDPSock.send(etx);
 		// cleanup
 		inFstream.close();
   	}
