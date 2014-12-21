@@ -9,7 +9,7 @@ import java.io.*;
 import java.util.Arrays;
 
 public class Sender {
-	private static final String USAGE = "USAGE:\n\t" + 
+	private static final String USAGE = "USAGE:\n\t" +
 		"sender [-c channel_IP] [-d destination_IP:Port] [-p Port] input_file" +
 		"\n\nBy default all addresses are 'localhost'.\n" +
 		"The default port this program listens on is 3000.\n" +
@@ -20,7 +20,7 @@ public class Sender {
 
 	// this socket is used by both threads
 	private static DatagramSocket UDPSock;
-	
+
 	public static void main(String[] args) throws Exception {
 		String fileName = "";
 		String chAddress = "localhost";
@@ -42,7 +42,7 @@ public class Sender {
 				if (sep.length > 1) {
 					dstPort = Integer.parseInt(sep[1]);
 				}
-			} else if ("-p".equals(args[i])) {	
+			} else if ("-p".equals(args[i])) {
 				// the next string is my port
 				i++;
 				myPort = Integer.parseInt(args[i]);
@@ -50,7 +50,7 @@ public class Sender {
 				// the current string is the source filename
 				fileName = args[i];
 			}
-		}		
+		}
 		// the input file must be valid
 		File inFile = new File(fileName);
 		if ((!inFile.isFile()) || (!inFile.canRead())) {
@@ -72,7 +72,7 @@ public class Sender {
 			HipsterPacket pkt = new HipsterPacket();
 			pkt.setCode(HipsterPacket.DATA);
 			pkt.setPayload(Arrays.copyOf(buf, read));
-			pkt.setDestinationAddress(InetAddress.getByName(dstAddress));	
+			pkt.setDestinationAddress(InetAddress.getByName(dstAddress));
 			pkt.setDestinationPort(dstPort);
 			pkt.setSequenceNumber(sn);
 			++sn;
@@ -83,11 +83,12 @@ public class Sender {
 			UDPSock.send(datagram);
 
 			read = inFstream.read(buf);
+			Thread.sleep(1);
 		}
 		// send an ETX packet to close the connection
 		HipsterPacket pkt = new HipsterPacket();
 		pkt.setCode(HipsterPacket.ETX);
-		pkt.setDestinationAddress(InetAddress.getByName(dstAddress));	
+		pkt.setDestinationAddress(InetAddress.getByName(dstAddress));
 		pkt.setDestinationPort(dstPort);
 		pkt.setSequenceNumber(sn);
 		DatagramPacket etx = pkt.toDatagram();

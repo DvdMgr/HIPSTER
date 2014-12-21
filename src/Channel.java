@@ -45,8 +45,8 @@ public class Channel {
       int usefulLength = recPck.getLength() - recPck.getOffset();
 
       //decide if the packet is dropped or not
-      if(isDropped(usefulLength)) {
-        //do nothing
+      if(false) { //isDropped(usefulLength)) { //As acks are not taken into account by the sender
+        //do nothing                           // ploss is set to 0
         System.out.println("Packet dropped!");
       }
       else { //forward the packet
