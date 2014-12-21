@@ -79,7 +79,7 @@ public class Receiver {
       stream.write(value, 0, value.length);
     }
 
-    System.out.println(stream.toString());
+    System.out.print(stream.toString());
 
     return;
   }
