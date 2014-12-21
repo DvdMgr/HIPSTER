@@ -66,9 +66,11 @@ public class Sender {
 		UDPSock = new DatagramSocket(myPort);
 		System.out.println("Listening on port: " + myPort);
 		InetAddress channel = InetAddress.getByName(chAddress);
+		
+		// take time into account (used for statistics)
+		long startTime = System.currentTimeMillis();
 
 		FileInputStream inFstream = new FileInputStream(inFile);
-
 		byte[] buf = new byte[PAYLOAD_SIZE];
 		int read = inFstream.read(buf);
 		int sn = 0;
@@ -104,10 +106,15 @@ public class Sender {
 		etx.setPort(CHANNEL_PORT);
 		UDPSock.send(etx);
 		// print the collected stats in a human readable manner
+		long elapsed = System.currentTimeMillis() - startTime;
+		long speed = 1000 * dataSent / elapsed;
 		double overhead = 100.0 * (dataSent - dataRead) / dataRead;
 		System.out.println("Bytes read: " + dataRead);
 		System.out.printf("Bytes sent: %s (overhead %3.2f%%)\n", dataSent,
 			overhead);
+		System.out.println("Elapsed time: " + elapsed + "ms (" + speed +
+			"bps)");
+		
 		// cleanup
 		inFstream.close();
   	}
