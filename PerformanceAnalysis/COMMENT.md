@@ -6,8 +6,8 @@ DS ----- TC ----- DR
 
 R1, R2, tau1 and tau2 refer all to L3.
 Assumptions:
-1) R2 is the bottleneck. This isn't a strong assumption as the results don't change to much if we consider R1 as the bottleneck. The only point is that the TC must have a good buffer.
-2) The number of packets (which is total message length M over packet length L) should be >> 1, otherwise the DS would send again packets that were correctly received but not yet acked as the acks are still being transmitted. Note that also retxed packets could be transmitted more times than necessary, but this is not taken into account in this analysis
+1) The number of packets (which is total message length M over packet length L) should be >> 1, otherwise the DS would send again packets that were correctly received but not yet acked as the acks are still being transmitted. Note that also retxed packets could be transmitted more times than necessary, but this is not taken into account in this analysis.
+2) Consideration: as the mass transmission of packets causes buffer overflow at the channel, the must wait 1 ms after a packet is sent.
 
 Given:
 M = message length in byte
@@ -15,6 +15,12 @@ H_HIP = 12 byte header of HIPSTER protocol
 H = header in byte (20 IP + 8 UDP + H_HIP)
 L = payload in byte
 rand_dl = 1024/ln(L + H_HIP) s (average value!)
+comp_wait = 10^-3 s
+
+----------------------------------------------------------------------------------------------------
+
+If comp_wait + (L+H) * 8/R1 + tau1 < (L+H) * 8/R2 + tau2 + rand_dl
+(so R2 is the bottleneck. The TC must have a good buffer)
 
 we get that:
 
@@ -24,7 +30,20 @@ E[second retx] = E[number of double retx] * (rand_dl + (L+H) * 8/R2)
 ...
 E[kth retx] = E[number of retransmission | k-1 packet transmitted] * (rand_dl + (L+H) * 8/R2)
 
-and E[total time] is the sum from 1 to l of the above expected times, with l the number of iterations which are necessary. We don't know a-priori which is the value of l, so in the attached MATLAB file we compute the delivery time for a finite l (say 4) and for an infinite l.
+----------------------------------------------------------------------------------------------------
+
+Else if comp_wait + (L+H) * 8/R1 + tau1 > (L+H) * 8/R2 + tau2 + rand_dl
+(which is R1 is the bottleneck or the bitrate is similar in both the links)
+
+E[first tx] = M/L(comp_wait + (L+H) * 8/R1) - comp_wait + tau1 + tau2 + (rand_dl + (L+H) * 8/R2)
+E[first retx] = E[number of retx] * (comp_wait + (L+H) * 8/R1)
+E[second retx] = E[number of double retx] * (comp_wait + (L+H) * 8/R1)
+...
+E[kth retx] = E[number of retransmission | k-1 packet transmitted] * (comp_wait + (L+H) * 8/R1)
+
+----------------------------------------------------------------------------------------------------
+
+E[total time] is the sum from 1 to l of the above expected times, with l the number of iterations which are necessary. We don't know a-priori which is the value of l, so in the attached MATLAB file we compute the delivery time for a finite l (say 4) and for an infinite l.
 
 FirstRETX is a RV ~ Bin(M/L, P) with P = prob[packet is lost + ack is lost|packet not lost], but as P[ack is lost|packet not lost] = P[ack is lost] = 1 - exp(-12/1024) = 0.01 we consider P = P_loss = 1-exp(-(L + H_HIP)/1024).
 So E[FirstRETX] = M/L * P_loss, E[SecondRETX] = E[FirstRETX] * P_loss = M/L * (P_loss)^2. Generally E[number of retx at kth iterations] = M/L * P_loss^k
