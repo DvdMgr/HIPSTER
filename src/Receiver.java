@@ -11,6 +11,8 @@ import java.io.*;
 // TODO Clarify addresses and ports for the channel and the source.
 public class Receiver {
 
+  static String filename = "File";
+
   static int udpListenPort = 65433;// 65433;                 // These two ports handle communication with the channel
   static int udpSendPort = 65432;//65432;
 
@@ -23,6 +25,9 @@ public class Receiver {
   static InetAddress channelAddress;
 
   public static void main(String[] args) throws Exception { // TODO Refine Exception catching
+
+    // TODO Use nice args handling to set parameters
+    filename = args[0];
 
     sourceAddress = InetAddress.getLocalHost();     // TODO We should use the actual address here
     channelAddress = InetAddress.getLocalHost();
@@ -79,7 +84,26 @@ public class Receiver {
       stream.write(value, 0, value.length);
     }
 
-    System.out.print(stream.toString());
+    // Write the stream to a file
+    try{
+      // Open stream
+      FileOutputStream outputStream = new FileOutputStream (filename);
+
+      // Write to file
+      try{
+        stream.writeTo(outputStream);
+      }
+      catch(Exception e) {
+        System.out.println(e.getMessage());
+      }
+      // Close stream
+      finally{
+        outputStream.close();
+      }
+    }
+    catch (Exception e) {
+      System.out.println(e.getMessage());
+    }
 
     return;
   }
