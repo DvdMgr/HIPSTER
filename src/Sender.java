@@ -80,11 +80,15 @@ public class Sender {
 			pkt.setDestinationPort(dstPort);
 			pkt.setSequenceNumber(sn);
 			++sn;
-
+			// to send an hipster packet convert it into a datagram and
+			// set the destination port & address
 			DatagramPacket datagram = pkt.toDatagram();
 			datagram.setAddress(channel);
 			datagram.setPort(CHANNEL_PORT);
 			UDPSock.send(datagram);
+			dataRead += read;
+			// TODO: take retransmission into account
+			dataSent += read + HipsterPacket.headerLength;
 
 			read = inFstream.read(buf);
 			Thread.sleep(1);
@@ -99,6 +103,11 @@ public class Sender {
 		etx.setAddress(channel);
 		etx.setPort(CHANNEL_PORT);
 		UDPSock.send(etx);
+		// print the collected stats in a human readable manner
+		double overhead = 100.0 * (dataSent - dataRead) / dataRead;
+		System.out.println("Bytes read: " + dataRead);
+		System.out.printf("Bytes sent: %s (overhead %3.2f%%)\n", dataSent,
+			overhead);
 		// cleanup
 		inFstream.close();
   	}
