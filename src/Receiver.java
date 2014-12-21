@@ -27,7 +27,8 @@ public class Receiver {
   public static void main(String[] args) throws Exception { // TODO Refine Exception catching
 
     // TODO Use nice args handling to set parameters
-    filename = args[0];
+    if (args.length == 1)
+      filename = args[0]; 
 
     sourceAddress = InetAddress.getLocalHost();     // TODO We should use the actual address here
     channelAddress = InetAddress.getLocalHost();
