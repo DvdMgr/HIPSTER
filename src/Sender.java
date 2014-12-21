@@ -22,11 +22,15 @@ public class Sender {
 	private static DatagramSocket UDPSock;
 
 	public static void main(String[] args) throws Exception {
+		// those variables store the runtime options
 		String fileName = "";
 		String chAddress = "localhost";
 		String dstAddress = "localhost";
 		int dstPort = 4000;
 		int myPort = 3000;
+		// those variables are used for statistics
+		int dataRead = 0; // total bytes read
+		int dataSent = 0; // total bytes sent (including header)
 
 		for(int i = 0; i < args.length; i++)
 		{

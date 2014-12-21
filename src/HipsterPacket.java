@@ -33,11 +33,13 @@ public class HipsterPacket {
 	public static final int DATA = 0;
 	public static final int ACK  = 1;
 	public static final int ETX  = 2;
-	public static final int MIN_CODE = 0;
-	public static final int MAX_CODE = 2;
 	public static final int headerLength = 12;
-	public static final int byteMask = 0xFF;
-
+	/*
+	 * Private constants
+	 */
+	private static final int MIN_CODE = 0;
+	private static final int MAX_CODE = 2;
+	private static final int byteMask = 0xFF;
 	/*
 	 * Private Variables
 	 */
@@ -47,7 +49,6 @@ public class HipsterPacket {
 	private int code;
 	private int sequenceNumber;
 	private byte[] payload;
-
 	/*
 	 * Constructors
 	 */
