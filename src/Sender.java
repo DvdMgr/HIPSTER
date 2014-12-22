@@ -16,7 +16,14 @@ public class Sender {
 		"The default port for the receiver is 4000.";
 
 	private static final int CHANNEL_PORT = 65432;
-	private static final int PAYLOAD_SIZE = 512;
+	/*
+	 * The following variables affect the sender's behaviour
+	 * "Rule of thumb" (cit.)
+	 */
+	private static final int PAYLOAD_SIZE = 512; // Byte
+	private static final int WINDOW_SIZE = 256;  // Packets
+	private static final int ACK_TIMEOUT = 1500; // ms
+	private static boolean MICHELE_MODE = true;
 
 	// this socket is used by both threads
 	private static DatagramSocket UDPSock;
@@ -64,17 +71,18 @@ public class Sender {
 		}
 		// initialize some data that will be used later
 		UDPSock = new DatagramSocket(myPort);
-		System.out.println("Listening on port: " + myPort);
+		UDPSock.setSoTimeout(ACK_TIMEOUT);
 		InetAddress channel = InetAddress.getByName(chAddress);
-		
+		FileInputStream inFstream = new FileInputStream(inFile);
+		// everythig correctly initialized. Greet the user
+		System.out.println("Listening on port: " + myPort);
 		// take time into account (used for statistics)
 		long startTime = System.currentTimeMillis();
-
-		FileInputStream inFstream = new FileInputStream(inFile);
 		byte[] buf = new byte[PAYLOAD_SIZE];
 		int read = inFstream.read(buf);
 		int sn = 0;
 		while (read >= 0) {
+			dataRead += read;
 			HipsterPacket pkt = new HipsterPacket();
 			pkt.setCode(HipsterPacket.DATA);
 			pkt.setPayload(Arrays.copyOf(buf, read));
@@ -88,12 +96,14 @@ public class Sender {
 			datagram.setAddress(channel);
 			datagram.setPort(CHANNEL_PORT);
 			UDPSock.send(datagram);
-			dataRead += read;
 			// TODO: take retransmission into account
 			dataSent += read + HipsterPacket.headerLength;
 
 			read = inFstream.read(buf);
-			Thread.sleep(1);
+			if (MICHELE_MODE == true)
+				Thread.sleep(1);
+			else if ((sn % WINDOW_SIZE == 0) || (read <= 0))
+				processACKs();
 		}
 		// send an ETX packet to close the connection
 		HipsterPacket pkt = new HipsterPacket();
@@ -105,7 +115,7 @@ public class Sender {
 		etx.setAddress(channel);
 		etx.setPort(CHANNEL_PORT);
 		UDPSock.send(etx);
-            dataSent += HipsterPacket.headerLength;
+		dataSent += HipsterPacket.headerLength;
 		// print the collected stats in a human readable manner
 		long elapsed = System.currentTimeMillis() - startTime;
 		long speed = dataSent / elapsed;
@@ -118,5 +128,22 @@ public class Sender {
 		
 		// cleanup
 		inFstream.close();
-  	}
+	}
+
+	private static void processACKs() throws IOException {
+		for(int count = 0; count < WINDOW_SIZE; count++) {
+			DatagramPacket aPacket = new DatagramPacket(
+				new byte[HipsterPacket.headerLength],
+				HipsterPacket.headerLength);
+			try {
+				UDPSock.receive(aPacket);
+			} catch (SocketTimeoutException ste) {
+				System.out.println("\nreceive() timed out");
+				return; // there's no point to wait longer
+			}
+			HipsterPacket ack = new HipsterPacket().fromDatagram(aPacket);
+			if (ack.isAck())
+				System.out.print("\rACK for: " + ack.getSequenceNumber());
+		}
+	}
 }
