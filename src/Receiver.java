@@ -9,6 +9,8 @@ import java.util.*;   // Maps and useful stuff
 import java.io.*;
 
 // TODO Clarify addresses and ports for the channel and the source.
+// TODO Decide whether to use a TreeMap or a HashMap followed by a TreeMap for sorting
+// TODO Clean up this mess
 public class Receiver {
 
   static String filename = "File";
@@ -28,7 +30,7 @@ public class Receiver {
 
     // TODO Use nice args handling to set parameters
     if (args.length == 1)
-      filename = args[0]; 
+      filename = args[0];
 
     sourceAddress = InetAddress.getLocalHost();     // TODO We should use the actual address here
     channelAddress = InetAddress.getLocalHost();
@@ -38,7 +40,9 @@ public class Receiver {
     DatagramSocket senderSocket = new DatagramSocket();
 
     // Prepare the map that will be used to store the file
-    Map<Integer, byte[]> map = new TreeMap<Integer, byte[]>();
+    Map<Integer, byte[]> map = new HashMap<Integer, byte[]>();
+
+    boolean[] checklist = new boolean[3180];
 
     // Start executing the algorithm
     boolean waitingForData = true;
@@ -54,6 +58,10 @@ public class Receiver {
       int sn = hipsterPacket.getSequenceNumber();
       byte[] data = hipsterPacket.getPayload();
 
+      // Print sn of the received packet
+      System.out.println("Received packet of sequence number: " + sn);
+      checklist[sn] = true;
+
       // Check whether the packet has the ETX flag
       if (hipsterPacket.isEtx()) {
         waitingForData = false;
@@ -61,6 +69,7 @@ public class Receiver {
       else {
         // Add the packet to the map using the SN as key
         map.put(sn, data);
+        //System.out.println("Added packet of sequence number: " + sn);
       }
 
       // Craft the ACK
@@ -72,14 +81,26 @@ public class Receiver {
       senderSocket.send(ack);
     }
 
-    // TODO Reassemble the file
+    int storedMappings = map.size();
+    System.out.println("Number of mappings stored: " + storedMappings);
+
+    for (int i = 0; i < storedMappings; i++)
+      if (checklist[i] == false)
+        System.out.println("Packet " + i + " was not received");
+
+
+
     // We use ByteArrayOutputStream for testing
     // Use FileOutputStream for real application (remember that memory is limited)
 
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
 
-    for(Map.Entry<Integer,byte[]> entry : map.entrySet()) {
-      Integer key = entry.getKey();
+    // Order by adding elements in a treemap
+    Map<Integer, byte[]> orderedMap = new TreeMap<Integer, byte[]>();
+    orderedMap.putAll(map);
+
+    for(Map.Entry<Integer,byte[]> entry : orderedMap.entrySet()) {
+      Integer integerKey = entry.getKey();
       byte[] value = entry.getValue();
 
       stream.write(value, 0, value.length);
