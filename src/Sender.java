@@ -21,9 +21,10 @@ public class Sender {
 	 * "Rule of thumb" (cit.)
 	 */
 	private static final int PAYLOAD_SIZE = 512; // Byte
-	private static final int WINDOW_SIZE = 256;  // Packets
+	private static final int WINDOW_SIZE = 64;  // Packets
 	private static final int ACK_TIMEOUT = 1500; // ms
 	private static boolean MICHELE_MODE = true;
+	private static final int SENDER_PAUSE = 20; //ms
 
 	// this socket is used by both threads
 	private static DatagramSocket UDPSock;
@@ -101,7 +102,7 @@ public class Sender {
 
 			read = inFstream.read(buf);
 			if (MICHELE_MODE == true)
-				Thread.sleep(1);
+				Thread.sleep(SENDER_PAUSE);
 			else if ((sn % WINDOW_SIZE == 0) || (read <= 0))
 				processACKs();
 		}
@@ -125,7 +126,7 @@ public class Sender {
 			overhead);
 		System.out.println("Elapsed time: " + elapsed + "ms (" + speed +
 			"KBps)");
-		
+
 		// cleanup
 		inFstream.close();
 	}

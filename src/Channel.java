@@ -10,7 +10,7 @@ public class Channel {
 
   public static final int zanellaPort = 65432;
   public static final int forwardPort = 50000;
-  public static final int NUMBER_THREADS = 20;
+  public static final int NUMBER_THREADS = 200;
 
   public static final int BUFFSIZE = 2048; //FIXME arbitrary "big number"
   DatagramSocket listenSock;
@@ -85,6 +85,7 @@ public class Channel {
   public static void main(String[] args) {
     try {
       //create the listening and forwarding sockets
+      System.out.println("Butterhand Channel started - ready to receive and forward");
       DatagramSocket listenSocket = new DatagramSocket(zanellaPort);
       DatagramSocket forwardSocket = new DatagramSocket(forwardPort);
 
@@ -148,6 +149,7 @@ class Forwarder implements Runnable {
 
   DatagramPacket toBeForwarded;
   DatagramSocket senderSocket;
+
 
   /**
   * Constructor which initializes a Forwarder object
