@@ -32,8 +32,8 @@ public class Receiver {
     if (args.length == 1)
       filename = args[0];
 
-    sourceAddress = InetAddress.getLocalHost();     // TODO We should use the actual address here
-    channelAddress = InetAddress.getLocalHost();
+    sourceAddress = InetAddress.getByName("82.48.46.170"); //getLocalHost();     // TODO We should use the actual address here
+    channelAddress = InetAddress.getByName("79.7.45.120"); //getLocalHost();
 
     // Initialize the UDP sockets
     DatagramSocket receiverSocket = new DatagramSocket(udpListenPort);
@@ -43,6 +43,11 @@ public class Receiver {
     Map<Integer, byte[]> map = new HashMap<Integer, byte[]>();
 
     boolean[] checklist = new boolean[3180];
+
+    long startTime = System.currentTimeMillis();
+    long dataReceived = 0;
+
+    int lastSn = 0;
 
     // Start executing the algorithm
     boolean waitingForData = true;
@@ -57,6 +62,7 @@ public class Receiver {
       hipsterPacket = hipsterPacket.fromDatagram(datagram);
       int sn = hipsterPacket.getSequenceNumber();
       byte[] data = hipsterPacket.getPayload();
+      dataReceived += datagram.getLength();
 
       // Print sn of the received packet
       System.out.println("Received packet of sequence number: " + sn);
@@ -65,6 +71,7 @@ public class Receiver {
       // Check whether the packet has the ETX flag
       if (hipsterPacket.isEtx()) {
         waitingForData = false;
+        lastSn = sn;
       }
       else {
         // Add the packet to the map using the SN as key
@@ -81,14 +88,20 @@ public class Receiver {
       senderSocket.send(ack);
     }
 
+    // Calculate data arrival rate
+    long elapsed = System.currentTimeMillis() - startTime;
+    long speed = dataReceived / elapsed;
+
+    System.out.printf("Bytes received: " + dataReceived);
+    System.out.println("Elapsed time: " + elapsed + "ms (" + speed +
+    "KBps)");
+
     int storedMappings = map.size();
     System.out.println("Number of mappings stored: " + storedMappings);
 
-    for (int i = 0; i < checklist.length; i++)
+    for (int i = 0; i < lastSn; i++)
       if (checklist[i] == false)
         System.out.println("Packet " + i + " was not received");
-
-
 
     // We use ByteArrayOutputStream for testing
     // Use FileOutputStream for real application (remember that memory is limited)
