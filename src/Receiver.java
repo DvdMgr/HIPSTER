@@ -84,7 +84,7 @@ public class Receiver {
     int storedMappings = map.size();
     System.out.println("Number of mappings stored: " + storedMappings);
 
-    for (int i = 0; i < storedMappings; i++)
+    for (int i = 0; i < checklist.length; i++)
       if (checklist[i] == false)
         System.out.println("Packet " + i + " was not received");
 
