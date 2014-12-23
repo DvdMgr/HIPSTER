@@ -148,14 +148,14 @@ public class Receiver {
     int storedMappings = map.size();
     System.out.println("Number of mappings stored: " + storedMappings);
 
-    System.out.println(lostPackets + " packets lost in total");
-
     int lostPackets = 0;
     for (int i = 0; i < etxSn; i++)
       if (checklist[i] == false) {
         System.out.println("Packet " + i + " was not received");
         lostPackets++;
       }
+
+    System.out.println(lostPackets + " packets lost in total");
 
     /*
      * Reorder and write output file
