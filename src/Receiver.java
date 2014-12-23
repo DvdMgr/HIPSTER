@@ -98,6 +98,9 @@ public class Receiver {
       HipsterPacket hipsterPacket = new HipsterPacket();
       hipsterPacket = hipsterPacket.fromDatagram(datagram);
       int sn = hipsterPacket.getSequenceNumber();
+      // Adjust time measurements
+      if (dataReceived == 0)
+        startTime = System.currentTimeMillis();
       byte[] data = hipsterPacket.getPayload();
       dataReceived += datagram.getLength();       // Counter of the received bytes
 
@@ -105,11 +108,11 @@ public class Receiver {
       //System.out.println("Received packet of sequence number: " + sn);
 
       // Mark packet as received in the checklist
-      if (sn < checklist.length) {
+      if (sn <= checklist.length) {
         checklist[sn] = true;
       } else {
-        System.out.println("Expanding checklist...");
-        boolean[] newchecklist = new boolean[2*checklist.length];
+        //System.out.println("Expanding checklist...");
+        boolean[] newchecklist = new boolean[2*sn];
         System.arraycopy(checklist, 0, newchecklist, 0, checklist.length);
         checklist = newchecklist;
         checklist[sn] = true;
