@@ -21,9 +21,8 @@ public class Sender {
 	 * "Rule of thumb" (cit.)
 	 */
 	private static final int PAYLOAD_SIZE = 512; // Byte
-	private static final int WINDOW_SIZE = 64;   // Packets
-	private static final int ACK_TIMEOUT = 1500; // ms
-	private static boolean MICHELE_MODE = true;
+	private static final int WINDOW_SIZE = 24;   // Packets
+	private static boolean MICHELE_MODE = false;
 	private static final int SENDER_PAUSE = 1;  // ms
 
 	// runtime options. See USAGE variable
@@ -32,6 +31,8 @@ public class Sender {
 	private static InetAddress dstAddr = chAddr; // localhost
 	private static int dstPort = 4000;
 	private static int myPort = 3000;
+	
+	private static ListenerThread ackListener;
 
 	public static void main(String[] args) throws Exception {
 		// those variables are used for statistics
@@ -71,7 +72,7 @@ public class Sender {
 		// initialize some data
 		DatagramSocket UDPSock = new DatagramSocket(myPort);
 		FileInputStream inFstream = new FileInputStream(inFile);
-		ListenerThread ackListener = new ListenerThread(UDPSock);
+		ackListener = new ListenerThread(UDPSock);
 		ackListener.start();
 		HashMap<Integer, DatagramPacket> packets = new HashMap<Integer,
 			DatagramPacket>();
@@ -138,7 +139,7 @@ public class Sender {
 		long elapsed = System.currentTimeMillis() - startTime;
 		long speed = dataSent / elapsed;
 		double overhead = 100.0 * (dataSent - dataRead) / dataRead;
-		System.out.printf("\nBytes sent: %s (overhead %3.2f%%)\n", dataSent,
+		System.out.printf("Bytes sent: %s (overhead %3.2f%%)\n", dataSent,
 			overhead);
 		System.out.println("Elapsed time: " + elapsed + "ms (" + speed +
 			"KBps)");
@@ -148,6 +149,9 @@ public class Sender {
 		DatagramSocket sock) throws IOException, InterruptedException
 	{
 		int sent = 0;
+		int sentPkts = ackListener.acked.size(); //assume that all acked packets
+		// up to now are sent
+
 		for (int sn = 0; sn < max; sn++) {
 			DatagramPacket datagram;
 			datagram = map.get(sn);
@@ -156,10 +160,16 @@ public class Sender {
 
 			sock.send(datagram);
 			sent += datagram.getLength();
-			
+			sentPkts++;
+
 			if (MICHELE_MODE == true)
 				Thread.sleep(SENDER_PAUSE);
-			//else if ((sn % WINDOW_SIZE == 0) || (read <= 0))
+			else if ((sentPkts - ackListener.acked.size()) > WINDOW_SIZE) {
+				// busy-wait for the missing acks
+				while ((ackListener.acked.size() - sentPkts) > 0)
+				{/* do nothing */}
+				//break; // start retransmission phase
+			}
 		}
 		return sent;
 	}
