@@ -24,7 +24,7 @@ public class Sender {
 	private static final int WINDOW_SIZE = 64;   // Packets
 	private static final int ACK_TIMEOUT = 1500; // ms
 	private static boolean MICHELE_MODE = true;
-	private static final int SENDER_PAUSE = 20;  // ms
+	private static final int SENDER_PAUSE = 1;  // ms
 
 	// runtime options. See USAGE variable
 	private static String fileName = "";
@@ -73,12 +73,11 @@ public class Sender {
 		FileInputStream inFstream = new FileInputStream(inFile);
 		ListenerThread ackListener = new ListenerThread(UDPSock);
 		ackListener.start();
+		HashMap<Integer, DatagramPacket> packets = new HashMap<Integer,
+			DatagramPacket>();
 		// everythig correctly initialized. Greet the user
 		System.out.println("Listening on port: " + myPort);
-		// need to load the file in memory
-
-		// take time into account (used for statistics)
-		long startTime = System.currentTimeMillis();
+		// All the file has to be stored in memory for this algorithm to work
 		byte[] buf = new byte[PAYLOAD_SIZE];
 		int read = inFstream.read(buf);
 		int sn = 0;
@@ -86,39 +85,83 @@ public class Sender {
 			dataRead += read;
 			DatagramPacket datagram;
 			datagram = craftPacket(Arrays.copyOf(buf, read), sn);
-			UDPSock.send(datagram);
+			packets.put(sn, datagram);
 			++sn;
-			// TODO: take retransmission into account
-			dataSent += read + HipsterPacket.headerLength;
-
 			read = inFstream.read(buf);
-			if (MICHELE_MODE == true)
-				Thread.sleep(SENDER_PAUSE);
-			//else if ((sn % WINDOW_SIZE == 0) || (read <= 0))
 		}
+		inFstream.close();
+		final int maxSN = sn; // the sender loop need to know when to stop
+		System.out.println("Read: " + dataRead + " Bytes (" + (maxSN - 1) +
+			" packets)");
+		long startTime = System.currentTimeMillis(); // used for stats		
+		// send that data!!
+		while (!packets.isEmpty()) {
+			dataSent += sendAll(packets, maxSN, UDPSock);
+			// remove acked packets from the map
+			Vector<Integer> acked = ackListener.acked;
+			int size = acked.size();
+			for (int i = 0; i <	size; i++)
+				packets.remove(acked.get(i));
+		}
+		// new ACKs will be handled here as the transmission is complete
+		ackListener.stopIt();
+		UDPSock.setSoTimeout(2500); // time to wait for the ack of ETX
 		// send an ETX packet to close the connection
+		boolean closed = false;
+
 		HipsterPacket pkt = new HipsterPacket();
 		pkt.setCode(HipsterPacket.ETX);
 		pkt.setDestinationAddress(dstAddr);
 		pkt.setDestinationPort(dstPort);
-		pkt.setSequenceNumber(sn);
+		pkt.setSequenceNumber(maxSN); // last one!
 		DatagramPacket etx = pkt.toDatagram();
 		etx.setAddress(chAddr);
 		etx.setPort(CHANNEL_PORT);
-		UDPSock.send(etx);
-		dataSent += HipsterPacket.headerLength;
+		
+		while (!closed) {
+			UDPSock.send(etx);
+			dataSent += HipsterPacket.headerLength;
+			try {
+				byte[] ackBuf = new byte[HipsterPacket.headerLength];
+				DatagramPacket rec = new DatagramPacket(ackBuf,
+					HipsterPacket.headerLength);
+				UDPSock.receive(rec);
+
+				HipsterPacket ack = new HipsterPacket().fromDatagram(rec);
+				if ((ack.isAck()) && (ack.getSequenceNumber() == maxSN))
+					closed = true;
+			} catch (SocketTimeoutException soTomeout) {
+				// do nothing	
+			}
+		}
 		// print the collected stats in a human readable manner
 		long elapsed = System.currentTimeMillis() - startTime;
 		long speed = dataSent / elapsed;
 		double overhead = 100.0 * (dataSent - dataRead) / dataRead;
-		System.out.println("Bytes read: " + dataRead);
-		System.out.printf("Bytes sent: %s (overhead %3.2f%%)\n", dataSent,
+		System.out.printf("\nBytes sent: %s (overhead %3.2f%%)\n", dataSent,
 			overhead);
 		System.out.println("Elapsed time: " + elapsed + "ms (" + speed +
 			"KBps)");
+	}
+	// returns the bytes sent
+	private static int sendAll(Map<Integer, DatagramPacket> map, int max,
+		DatagramSocket sock) throws IOException, InterruptedException
+	{
+		int sent = 0;
+		for (int sn = 0; sn < max; sn++) {
+			DatagramPacket datagram;
+			datagram = map.get(sn);
+			if (datagram == null)
+				continue; // get another packet
 
-		// cleanup
-		inFstream.close();
+			sock.send(datagram);
+			sent += datagram.getLength();
+			
+			if (MICHELE_MODE == true)
+				Thread.sleep(SENDER_PAUSE);
+			//else if ((sn % WINDOW_SIZE == 0) || (read <= 0))
+		}
+		return sent;
 	}
 
 	private static DatagramPacket craftPacket(byte[] payload, int seqNum) {
@@ -145,29 +188,34 @@ class ListenerThread extends Thread {
 
 	private DatagramSocket rSock;
 	public Vector<Integer> acked;
+	private boolean run = true;
 
 	ListenerThread() {
 		throw new IllegalArgumentException("I need a socket!");
 	}
 
-	ListenerThread(DatagramSocket theSocket) {
+	ListenerThread(DatagramSocket theSocket) throws SocketException {
 		rSock = theSocket;
+		rSock.setSoTimeout(10);
 		acked = new Vector<Integer>();
 	}
 
+	void stopIt() {
+		run = false;
+	}
+
 	public void run() {
-		while (true) { // forever
+		while (run) { // can't stop this ta-ta-tata
 			DatagramPacket received = new DatagramPacket(
 				new byte[HipsterPacket.headerLength],
 				HipsterPacket.headerLength);
 			try {
 				rSock.receive(received);
 				HipsterPacket ack = new HipsterPacket().fromDatagram(received);
-				if (ack.isAck()) {
-					System.out.print("\rACK for: " +
-						ack.getSequenceNumber());
+				if (ack.isAck())
 					acked.add(ack.getSequenceNumber());
-				}
+			} catch (SocketTimeoutException soex) {
+				// this is something expected. just ignore it
 			} catch (Exception ex) {
 				System.out.println("WARNING: " + ex);
 				System.out.println("The exception will be bravely ignored.");
