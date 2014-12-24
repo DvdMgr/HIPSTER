@@ -3,19 +3,88 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-//TODO test if the number of threads in the pool is enough. This is the number of threads that are
-//TODO always in the pool, even if inactive, but if the number of added tasks become larger than the
-//TODO number of threads the new tasks are queued and new threads aren't created. Thus this number //TODO should be large enough to host the delayed forwarding tasks
+/**
+* This class represents a Channel which receives a packet, decides if it should be dropped or
+* forwarded with a random delay and forwards it to the end point of the connection, whose IP and
+* port must be specified in first 6 bytes of the UDP payload.
+* It listens on port 65432.
+*/
 public class Channel {
 
+  //port numbers
   public static final int zanellaPort = 65432;
   public static final int forwardPort = 50000;
-  public static final int NUMBER_THREADS = 200;
 
-  public static final int BUFFSIZE = 2048; //FIXME arbitrary "big number"
-  DatagramSocket listenSock;
-  DatagramSocket forwardSock;
-  ScheduledExecutorService scheduler;
+  //parameters tuned with "rule of thumb"
+  private static final int NUMBER_THREADS = 200;
+  private static final int BUFFSIZE = 2048; //arbitrary "big number"
+
+  //runtime options, see USAGE variable
+  private static boolean noDrop = false;
+  private static boolean noDelay = false;
+  private static boolean verbose = false;
+
+  //counters
+  private static int receivedCounter = 0;
+  private static int forwardedCounter = 0;
+
+  private static final String USAGE = "USAGE:\n\t" +
+  "Channel [-noDrop] [-noDelay] [-v]" +
+  "\n\nBy default the Channel drops and delays.\n" +
+  "If -noDrop flag is added the Channel doesn't drop packets.\n" +
+  "If -noDelay flag is added the Channel doesn't add delay to packets. \n" +
+  "If -v flag is added the Channel show some statistics on received and forwarded packets.";
+
+  //private variables of a Channel object
+  private DatagramSocket listenSock;
+  private DatagramSocket forwardSock;
+  private ScheduledExecutorService scheduler;
+
+  public static void main(String[] args) {
+    try {
+
+      System.out.println("Butterhand Channel started - ready to receive and forward");
+
+      // Parse command line arguments
+      for(int i = 0; i < args.length; i++)
+      {
+        if ("-h".equals(args[i])) {
+          System.out.println(USAGE);
+          return;
+        } else if ("-noDrop".equals(args[i])) {
+          // the next string is the channel address
+          noDrop = true;
+          System.out.println("The Channel won't drop any packet on purpose");
+        } else if ("-noDelay".equals(args[i])) {
+          // the next string is the destination address
+          noDelay = true;
+          System.out.println("The Channel won't delay any packet on purpose");
+        } else if ("-v".equals(args[i])) {
+          verbose = true;
+          System.out.println("The Channel will show a counter for received packets");
+        }
+      }
+
+      //create the listening and forwarding sockets
+      DatagramSocket listenSocket = new DatagramSocket(zanellaPort);
+      DatagramSocket forwardSocket = new DatagramSocket(forwardPort);
+
+      //create the ThreadPool
+      ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(NUMBER_THREADS);
+
+      //receive Datagrams and perform the required tasks
+      while(true) {
+        Channel chan = new Channel(listenSocket, forwardSocket, scheduledThreadPool);
+        chan.getRequest();
+      }
+    }
+    catch(SocketException e)
+    {
+      System.err.println("SocketException in main");
+    }
+
+  }
+
 
   /**
   * Constructor
@@ -38,18 +107,21 @@ public class Channel {
       byte[] received = new byte[BUFFSIZE];
       DatagramPacket recPck = new DatagramPacket(received, BUFFSIZE);
       listenSock.receive(recPck);
-      System.out.println("Packet received from " + recPck.getPort());
+
+      if(verbose) {
+      receivedCounter++;
+      System.out.print("\rPackets received: " + receivedCounter);
+      }
 
       //extract the data and compute the UDP payload length
       received = recPck.getData();
       int usefulLength = recPck.getLength() - recPck.getOffset();
 
       //decide if the packet is dropped or not
-      if(false) { //isDropped(usefulLength)) { //As acks are not taken into account by the sender
-        //do nothing                           // ploss is set to 0
+      if(!noDrop && isDropped(usefulLength)) {
+        //do nothing
         System.out.println("Packet dropped!");
-      }
-      else { //forward the packet
+      } else { //forward the packet
         //extract forward address and port
         InetAddress fwAddr = InetAddress.getByAddress(Arrays.copyOfRange(received, 0, 4));
         int fwPort = twoBytesToInt(received[4], received[5]);
@@ -61,7 +133,10 @@ public class Channel {
         recPck.setAddress(fwAddr);
 
         //compute random delay
-        int delay = (int) randExpDl(usefulLength); //the delay is approximated to its floor
+        int delay = 0;
+        if(!noDelay) {
+          delay = (int) randExpDl(usefulLength); //the delay is approximated to its floor
+        }
 
         //schedule the forwarding of a packet
         Forwarder forwarder = new Forwarder(recPck, forwardSock);
@@ -80,34 +155,7 @@ public class Channel {
     }
   }
 
-
-
-  public static void main(String[] args) {
-    try {
-      //create the listening and forwarding sockets
-      System.out.println("Butterhand Channel started - ready to receive and forward");
-      DatagramSocket listenSocket = new DatagramSocket(zanellaPort);
-      DatagramSocket forwardSocket = new DatagramSocket(forwardPort);
-
-      //create the ThreadPool
-      ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(NUMBER_THREADS);
-
-      //receive Datagrams and perform the required tasks
-      while(true) {
-        Channel chan = new Channel(listenSocket, forwardSocket, scheduledThreadPool);
-        chan.getRequest();
-      }
-    }
-    catch(SocketException e)
-    {
-      System.err.println("SocketException in main");
-    }
-
-
-  }
-
-
-  //Private methods
+  //Private utility methods
 
   /**
   * Combines two bytes in a int,
@@ -144,12 +192,14 @@ public class Channel {
   }
 }
 
-//Runnable class that takes care of forwarding packets
+/**
+* Runnable class that takes care of forwarding packets
+*/
 class Forwarder implements Runnable {
 
+  //private variables of a Forwarder object
   DatagramPacket toBeForwarded;
   DatagramSocket senderSocket;
-
 
   /**
   * Constructor which initializes a Forwarder object
@@ -164,15 +214,11 @@ class Forwarder implements Runnable {
   */
   public void run() {
     try {
-
       senderSocket.send(toBeForwarded);
-      System.out.println("Packet forwarded after delay! to " + toBeForwarded.getPort());
     }
     catch(IOException e)
     {
       System.err.println("IOException in Forwarder.run()");
     }
   }
-
-
 }

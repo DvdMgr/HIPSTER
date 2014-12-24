@@ -32,7 +32,7 @@ public class Sender {
 	private static InetAddress dstAddr = chAddr; // localhost
 	private static int dstPort = 4000;
 	private static int myPort = 3000;
-	
+
 	public static void main(String[] args) throws Exception {
 		// those variables are used for statistics
 		int dataRead = 0; // total bytes read
@@ -123,7 +123,7 @@ public class Sender {
 
 	private static DatagramPacket craftPacket(byte[] payload, int seqNum) {
 		HipsterPacket pkt = new HipsterPacket();
-		
+
 		pkt.setCode(HipsterPacket.DATA);
 		pkt.setPayload(payload);
 		pkt.setDestinationAddress(dstAddr);
@@ -142,14 +142,14 @@ public class Sender {
  * This thread is responsible for receiving processing acks
  */
 class ListenerThread extends Thread {
-	
+
 	private DatagramSocket rSock;
 	public Vector<Integer> acked;
 
 	ListenerThread() {
 		throw new IllegalArgumentException("I need a socket!");
 	}
-	
+
 	ListenerThread(DatagramSocket theSocket) {
 		rSock = theSocket;
 		acked = new Vector<Integer>();
