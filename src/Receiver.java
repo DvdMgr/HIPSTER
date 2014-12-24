@@ -108,7 +108,7 @@ public class Receiver {
       //System.out.println("Received packet of sequence number: " + sn);
 
       // Mark packet as received in the checklist
-      if (sn <= checklist.length) {
+      if (sn < checklist.length-1) {
         checklist[sn] = true;
       } else {
         //System.out.println("Expanding checklist...");
