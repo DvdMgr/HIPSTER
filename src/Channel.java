@@ -26,7 +26,7 @@ public class Channel {
 
   //counters
   private static int receivedCounter = 0;
-  private static int forwardedCounter = 0;
+  private static int droppedCounter = 0;
 
   private static final String USAGE = "USAGE:\n\t" +
   "Channel [-noDrop] [-noDelay] [-v]" +
@@ -107,11 +107,7 @@ public class Channel {
       byte[] received = new byte[BUFFSIZE];
       DatagramPacket recPck = new DatagramPacket(received, BUFFSIZE);
       listenSock.receive(recPck);
-
-      if(verbose) {
       receivedCounter++;
-      System.out.print("\rPackets received: " + receivedCounter);
-      }
 
       //extract the data and compute the UDP payload length
       received = recPck.getData();
@@ -120,8 +116,15 @@ public class Channel {
       //decide if the packet is dropped or not
       if(!noDrop && isDropped(usefulLength)) {
         //do nothing
-        System.out.println("Packet dropped!");
-      } else { //forward the packet
+        droppedCounter++;
+        if(verbose) { //print stats
+          System.out.print("\rPackets received: " + receivedCounter + " dropped " + droppedCounter);
+        }
+      } else {
+        if(verbose) { //print stats
+          System.out.print("\rPackets received: " + receivedCounter + " dropped " + droppedCounter);
+        }
+        //forward the packet
         //extract forward address and port
         InetAddress fwAddr = InetAddress.getByAddress(Arrays.copyOfRange(received, 0, 4));
         int fwPort = twoBytesToInt(received[4], received[5]);

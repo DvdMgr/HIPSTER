@@ -20,7 +20,7 @@ public class Sender {
 	 * The following variables affect the sender's behaviour
 	 * "Rule of thumb" (cit.)
 	 */
-	private static final int PAYLOAD_SIZE = 512; // Byte
+	private static final int PAYLOAD_SIZE = 1000; // Byte
 	private static final int WINDOW_SIZE = 24;   // Packets
 	private static boolean MICHELE_MODE = false;
 	private static final int SENDER_PAUSE = 1;  // ms
@@ -31,7 +31,7 @@ public class Sender {
 	private static InetAddress dstAddr = chAddr; // localhost
 	private static int dstPort = 4000;
 	private static int myPort = 3000;
-	
+
 	private static ListenerThread ackListener;
 
 	public static void main(String[] args) throws Exception {
@@ -94,7 +94,7 @@ public class Sender {
 		final int maxSN = sn; // the sender loop need to know when to stop
 		System.out.println("Read: " + dataRead + " Bytes (" + (maxSN - 1) +
 			" packets)");
-		long startTime = System.currentTimeMillis(); // used for stats		
+		long startTime = System.currentTimeMillis(); // used for stats
 		// send that data!!
 		while (!packets.isEmpty()) {
 			dataSent += sendAll(packets, maxSN, UDPSock);
@@ -118,7 +118,7 @@ public class Sender {
 		DatagramPacket etx = pkt.toDatagram();
 		etx.setAddress(chAddr);
 		etx.setPort(CHANNEL_PORT);
-		
+
 		while (!closed) {
 			UDPSock.send(etx);
 			dataSent += HipsterPacket.headerLength;
@@ -132,7 +132,7 @@ public class Sender {
 				if ((ack.isAck()) && (ack.getSequenceNumber() == maxSN))
 					closed = true;
 			} catch (SocketTimeoutException soTomeout) {
-				// do nothing	
+				// do nothing
 			}
 		}
 		// print the collected stats in a human readable manner
