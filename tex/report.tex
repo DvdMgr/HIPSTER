@@ -1,0 +1,105 @@
+\documentclass[10pt,twocolumn]{article}
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%			AZ' STANDARD NEWCOMMANDS
+%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[english]{babel} 
+\usepackage[T1]{fontenc}
+\usepackage{cite, url,color} % Citation numbers being automatically sorted and properly "compressed/ranged". 
+%\usepackage{pgfplots}
+\usepackage{graphics,amsfonts}
+\usepackage[pdftex]{graphicx}
+\usepackage[cmex10]{amsmath}
+% Also, note that the amsmath package sets \interdisplaylinepenalty to 10000
+% thus preventing page breaks from occurring within multiline equations. Use:
+ \interdisplaylinepenalty=2500
+% after loading amsmath to restore such page breaks as IEEEtran.cls normally does.
+\usepackage[utf8]{inputenc}
+% Useful for dispalying quotations
+\usepackage{csquotes}
+% Compact lists
+\usepackage{enumitem}
+
+\usepackage{array}
+% http://www.ctan.org/tex-archive/macros/latex/required/tools/
+\usepackage{mdwmath}
+\usepackage{mdwtab}
+%mdwtab.sty	-- A complete ground-up rewrite of LaTeX's `tabular' and  `array' environments.  Has lots of advantages over
+%		   the standard version, and over the version in `array.sty'.
+% *** SUBFIGURE PACKAGES ***
+\usepackage[tight,footnotesize]{subfigure}
+
+\usepackage[top=1.5cm, bottom=2cm, right=1.6cm,left=1.6cm]{geometry}
+\usepackage{indentfirst}
+
+\usepackage{times}
+% make sections titles smaller to save space
+\usepackage{sectsty}
+\sectionfont{\large}
+
+\setlength\parindent{0pt}
+\linespread{1}
+
+\def\C#1{\mathcal{#1}}
+
+\renewcommand{\phi}{\varphi}
+% OPERATORS
+\newcommand{\floor}[1]{{\left\lfloor #1\right\rfloor}}
+\newcommand{\ceil}[1]{{\left\lceil #1\right\rceil}}
+\newcommand{\E}[1]{\mathop{\rm E}\nolimits\left[#1\right]} % Expectation
+\newcommand{\pr}[1]{\Pr\left[ #1 \right]}
+\renewcommand{\P}[1]{\mathrm{P}\left[ #1 \right]}
+
+\newcommand{\mbb}{\mathbb}
+\newcommand{\mee}{\mathrm{e}}
+\newcommand{\mrr}{\mathrm}
+\newcommand{\m}{\mathrm{m}}
+\newcommand{\mmin}[1]{{\min\left\{#1\right\}}}
+\newcommand{\mmax}[1]{{\max\left\{#1\right\}}}
+\newcommand{\id}[1]{\mathbf{1}\(#1\)} % Unit function  
+\newcommand{\Heav}[1]{H\left(#1\right)} % Heaviside function
+\newcommand{\eps}{\varepsilon}
+\newcommand{\rect}[1]{\mathrm{rect}\!\left(#1\right)}
+\newcommand{\sinc}[1]{\mathrm{sinc}\!\left(#1\right)}
+\newcommand{\bin}[2]{{\left(\begin{array}{c}#1\\#2\end{array}\right)}}
+
+\newcommand{\me}[2]{\left[ {#1} \right]_{(#2)}} % Submatrix \me{P}{i,j} produces [P]_{i,j} and denotes the element in the i-th row and j-th column of P
+\newcommand{\vv}[1]{\left[ {#1} \right]} % Submatrix \vv{a,b,c} produces [a,b,c]
+
+\newcommand{\Set}[1]{{\C #1}} 
+\newcommand{\Setd}[2]{\Set{#1}=\left\{#2\right\}}  % Set definition: \Set{S}{0,1,2} produces S={01,2,} where S is in mathcal 
+
+\newcommand{\mat}[1]{{\hbox{\textbf{#1}}}}
+\newcommand{\ei}[1]{{\mat{e}_{#1}}}   % all zero vector except in the $#1$-th element which is one
+\newcommand{\ind}[1]{\mathbf{\chi}\left\{#1\right\}} % Indicator function \ind{A}=1 if A is true, \ind{A}=0 otherwise. 
+
+% FORMATTING
+\newcommand{\ie}{i.e.,\,}
+\newcommand{\eg}{e.g.,\,}
+\newcommand{\columnbreak}{\vfill\eject} % Column break
+
+% REFERENCES
+\newcommand{\Fig}[1]{Fig.~\ref{#1}}
+\newcommand{\eq}[1]{(\ref{#1})}
+\newcommand{\Tab}[1]{Tab.~\ref{#1}}
+\newcommand{\Sec}[1]{Sec.~\ref{#1}}
+
+\begin{document}
+\title{HIPSTER, the alternative file transfer protocol}
+\author{}
+\date{}
+\maketitle
+
+\section{Protocol description}
+blabla\\
+Some flowcharts
+
+\section{Performance analysis}
+Compare HIPSTER with stop and wait and with a simple delay between packets.
+Tell them we tried to use the delay before the poor man's sliding window.
+
+\section{Actual result}
+The HIPSTER protocol rocks!
+
+\section{Concusion}
+O RLY? YUP!
+\end{document}

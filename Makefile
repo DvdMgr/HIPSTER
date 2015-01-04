@@ -13,5 +13,7 @@ channel: src/Channel.java src/HipsterPacket.java
 receiver: src/Receiver.java src/HipsterPacket.java
 	@javac -d . $?
 
+report: tex/report.tex
+	@pdflatex $?
 clean:
-	@rm -f *.class
+	@rm -f *.class *.pdf *.log *.aux
