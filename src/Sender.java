@@ -22,7 +22,7 @@ public class Sender {
 	 */
 	private static final int PAYLOAD_SIZE = 1000; // Byte
 	private static final int WINDOW_SIZE = 24;   // Packets
-	private static boolean MICHELE_MODE = false;
+	private static boolean MICHELE_MODE = true;
 	private static final int SENDER_PAUSE = 1;  // ms
 
 	// runtime options. See USAGE variable
