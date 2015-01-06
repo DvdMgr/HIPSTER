@@ -12,11 +12,12 @@ import java.util.*; // Vector Arrays and others
 
 public class ChannelTesterSend {
   private static final String USAGE = "USAGE:\n\t" +
-    "sender [-d destination_Port] [-p Port] [-s payloadSize] input_file" +
+    "sender [-d destination_Port] [-p Port] [-s payloadSize] [-dl]" +
     "\n\nBy default all addresses are 127.*.*.* (loopback).\n" +
     "The default port this program listens on is 3000.\n" +
     "The default port for the receiver is 4000. \n" +
-    "The default payload size is 1000";
+    "The default payload size is 1000. \n" +
+    "-dl is used to print the tx time of each packet";
 
   private static final int CHANNEL_PORT = 65432;
   /*
@@ -24,6 +25,8 @@ public class ChannelTesterSend {
    * "Rule of thumb" (cit.)
    */
   private static int PAYLOAD_SIZE = 1000; // Byte
+  //watch out: the actual size of the payload of UDP at the Channel is PAYLOAD_SIZE + HIPSTER_HEADER
+  private static int PAY_PACKETS = 5000;
   private static final int WINDOW_SIZE = 24;   // Packets
   private static boolean MICHELE_MODE = true;
   private static final int SENDER_PAUSE = 20;  // ms
@@ -65,16 +68,9 @@ public class ChannelTesterSend {
         fileName = args[i];
       }
     }
-    // the input file must be valid
-    File inFile = new File(fileName);
-    if ((!inFile.isFile()) || (!inFile.canRead())) {
-      System.out.println("Invalid input file: " + fileName + "\n");
-      System.out.println(USAGE);
-      return;
-    }
+
     // initialize some data
     DatagramSocket UDPSock = new DatagramSocket(myPort);
-    FileInputStream inFstream = new FileInputStream(inFile);
     ackListener = new ListenerThread(UDPSock);
     ackListener.start();
     HashMap<Integer, DatagramPacket> packets = new HashMap<Integer,
@@ -83,17 +79,16 @@ public class ChannelTesterSend {
     System.out.println("Listening on port: " + myPort);
     // All the file has to be stored in memory for this algorithm to work
     byte[] buf = new byte[PAYLOAD_SIZE];
-    int read = inFstream.read(buf);
+
     int sn = 0;
-    while (read >= 0) {
-      dataRead += read;
-      DatagramPacket datagram;
-      datagram = craftPacket(Arrays.copyOf(buf, read), sn);
+
+    for(int i = 0; i < PAY_PACKETS; i++) {
+      DatagramPacket datagram = craftPacket(buf, sn);
       packets.put(sn, datagram);
       ++sn;
-      read = inFstream.read(buf);
     }
-    inFstream.close();
+    System.out.println(sn);
+
     final int maxSN = sn; // the sender loop need to know when to stop
     System.out.println("Read: " + dataRead + " Bytes (" + (maxSN - 1) +
       " packets)");
@@ -121,7 +116,6 @@ public class ChannelTesterSend {
 
     while (!closed) {
       UDPSock.send(etx);
-      dataSent += HipsterPacket.headerLength;
       try {
         byte[] ackBuf = new byte[HipsterPacket.headerLength];
         DatagramPacket rec = new DatagramPacket(ackBuf,
@@ -143,7 +137,11 @@ public class ChannelTesterSend {
       overhead);
     System.out.println("Elapsed time: " + elapsed + "ms (" + speed +
       "KBps)");
-    System.out.println("Packet sent " + dataSent/PAYLOAD_SIZE);
+    if(PAYLOAD_SIZE == 0) {
+      System.out.println("Packet sent " + PAY_PACKETS);
+    } else {
+      System.out.println("Packet sent " + dataSent/(PAYLOAD_SIZE+HipsterPacket.headerLength));
+    }
   }
   // returns the bytes sent
   private static int sendAll(Map<Integer, DatagramPacket> map, int max,
@@ -194,6 +192,7 @@ public class ChannelTesterSend {
 
     return ret;
   }
+
 }
 
 /*

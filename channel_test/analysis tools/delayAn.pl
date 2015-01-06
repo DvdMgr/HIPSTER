@@ -4,13 +4,13 @@
 # simple but absolutely inefficient
 
 #open sent time file, update log file name when needed
-open (SENT, "sendTime600.txt") or die "I couldn't get at sendTime.txt";
+open (SENT, "sentTime12.txt") or die "I couldn't get at sendTime.txt";
 
 #open rec time file, update log file name when needed
-open (REC, "recTime600.txt") or die "I couldn't get at recTime.txt";
+open (REC, "recTime12.txt") or die "I couldn't get at recTime.txt";
 
 #open out file for uplink statistics
-open (DELAY, ">delay600.txt") or die "$! error trying to overwrite";
+open (DELAY, ">delay12.txt") or die "$! error trying to overwrite";
 # The original contents are gone, wave goodbye.
 
 my @recfile = <REC>;

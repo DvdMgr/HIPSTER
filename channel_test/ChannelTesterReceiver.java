@@ -27,10 +27,11 @@ public class ChannelTesterReceiver {
   static boolean printDl = false;
 
   private static final String USAGE = "USAGE:\n\t" +
-  "Receiver [-c channel_IP] [-d destination_IP:Port] [-p Port] [-dl] [-f output_file]" +
+  "Receiver [-d destination_Port] [-p Port] [-dl] [-f output_file]" +
   "\n\nBy default all addresses are 'localhost'.\n" +
   "The default port this program listens on is 65433.\n" +
-  "The default port for the receiver is 65431.";
+  "The default port for the receiver is 65431.\n"+
+  "-dl is used to print the tx time of each packet";
 
   public static void main(String[] args) throws Exception { // TODO Refine Exception catching
 
@@ -44,18 +45,10 @@ public class ChannelTesterReceiver {
       if ("-h".equals(args[i])) {
         System.out.println(USAGE);
         return;
-      } else if ("-c".equals(args[i])) {
-        // the next string is the channel address
-        i++;
-        channelAddress = InetAddress.getByName(args[i]);
       } else if ("-d".equals(args[i])) {
         // the next string is the destination address
         i++;
-        String[] sep = args[i].split(":");
-        sourceAddress = InetAddress.getByName(sep[0]);
-        if (sep.length > 1) {
-          hipsterSendPort = Integer.parseInt(sep[1]);
-        }
+        hipsterSendPort = Integer.parseInt(args[i]);
       } else if ("-p".equals(args[i])) {
         // the next string is my port
         i++;
