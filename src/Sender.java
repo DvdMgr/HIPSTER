@@ -16,13 +16,21 @@ public class Sender {
 		"The default port for the receiver is 4000.";
 
 	private static final int CHANNEL_PORT = 65432;
-	/*
-	 * The following variables affect the sender's behaviour
-	 * "Rule of thumb" (cit.)
-	 */
+	/*********************************************************
+	 * The following variables affect the sender's behaviour *
+	 * "Rule of thumb" (cit.)                                *
+	 *********************************************************/
 	private static final int PAYLOAD_SIZE = 1000; // Byte
+	/*
+	 * If more than this number of packets are still not acked then enter
+	 * a slow phase that sends a packet every ACK.
+	 */
 	private static final int WINDOW_SIZE = 64;   // Packets
-	private static final int MAX_BLOCK = 32;    // Packets
+	/*
+	 * The sender waits this many times before sending a packet anyway.
+	 * This avoids deadlocks and waiting too-much.
+	 */
+	private static final int MAX_BLOCK = 128;
 
 	// runtime options. See USAGE variable
 	private static String fileName = "";
@@ -179,6 +187,8 @@ public class Sender {
 				++inFlight;
 			} else {
 				++blockCount;
+				// ideally we should wait a RTT here.
+				// Not waiting works a treat so who cares!
 			}
 		}
 	}
