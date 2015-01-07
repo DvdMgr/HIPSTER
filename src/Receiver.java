@@ -126,7 +126,8 @@ public class Receiver {
       else {
         // Add the packet to the map using the SN as key
         map.put(sn, data);
-        //System.out.println("Added packet of sequence number: " + sn);
+        long relativeTime = System.currentTimeMillis() - startTime;
+        System.out.println(relativeTime + " : " + map.size() + " received packets");
       }
 
       // Craft the ACK
