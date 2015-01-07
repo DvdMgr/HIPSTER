@@ -21,9 +21,8 @@ public class Sender {
 	 * "Rule of thumb" (cit.)
 	 */
 	private static final int PAYLOAD_SIZE = 1000; // Byte
-	private static final int WINDOW_SIZE = 24;   // Packets
-	private static boolean MICHELE_MODE = true;
-	private static final int SENDER_PAUSE = 1;  // ms
+	private static final int WINDOW_SIZE = 64;   // Packets
+	private static final int MAX_BLOCK = 32;    // Packets
 
 	// runtime options. See USAGE variable
 	private static String fileName = "";
@@ -74,8 +73,8 @@ public class Sender {
 		FileInputStream inFstream = new FileInputStream(inFile);
 		ackListener = new ListenerThread(UDPSock);
 		ackListener.start();
-		HashMap<Integer, DatagramPacket> packets = new HashMap<Integer,
-			DatagramPacket>();
+		Map<Integer, DatagramPacket> packets = new
+			HashMap<Integer, DatagramPacket>();
 		// everythig correctly initialized. Greet the user
 		System.out.println("Listening on port: " + myPort);
 		// All the file has to be stored in memory for this algorithm to work
@@ -91,19 +90,11 @@ public class Sender {
 			read = inFstream.read(buf);
 		}
 		inFstream.close();
-		final int maxSN = sn; // the sender loop need to know when to stop
-		System.out.println("Read: " + dataRead + " Bytes (" + (maxSN - 1) +
+		System.out.println("Read: " + dataRead + " Bytes (" + (sn - 1) +
 			" packets)");
 		long startTime = System.currentTimeMillis(); // used for stats
 		// send that data!!
-		while (!packets.isEmpty()) {
-			dataSent += sendAll(packets, maxSN, UDPSock);
-			// remove acked packets from the map
-			Vector<Integer> acked = ackListener.acked;
-			int size = acked.size();
-			for (int i = 0; i <	size; i++)
-				packets.remove(acked.get(i));
-		}
+		dataSent += sendAll(packets, UDPSock, sn);
 		// new ACKs will be handled here as the transmission is complete
 		ackListener.stopIt();
 		UDPSock.setSoTimeout(2500); // time to wait for the ack of ETX
@@ -114,7 +105,7 @@ public class Sender {
 		pkt.setCode(HipsterPacket.ETX);
 		pkt.setDestinationAddress(dstAddr);
 		pkt.setDestinationPort(dstPort);
-		pkt.setSequenceNumber(maxSN); // last one!
+		pkt.setSequenceNumber(sn); // last one!
 		DatagramPacket etx = pkt.toDatagram();
 		etx.setAddress(chAddr);
 		etx.setPort(CHANNEL_PORT);
@@ -129,7 +120,7 @@ public class Sender {
 				UDPSock.receive(rec);
 
 				HipsterPacket ack = new HipsterPacket().fromDatagram(rec);
-				if ((ack.isAck()) && (ack.getSequenceNumber() == maxSN))
+				if ((ack.isAck()) && (ack.getSequenceNumber() == sn))
 					closed = true;
 			} catch (SocketTimeoutException soTomeout) {
 				// do nothing
@@ -144,34 +135,52 @@ public class Sender {
 		System.out.println("Elapsed time: " + elapsed + "ms (" + speed +
 			"KBps)");
 	}
-	// returns the bytes sent
-	private static int sendAll(Map<Integer, DatagramPacket> map, int max,
-		DatagramSocket sock) throws IOException, InterruptedException
+
+	/**
+	* Send all the data that has to be sent. Also handles retransmissions.
+	* Returns the raw number of bytes sent through the socket
+	*/
+	private static int sendAll(Map<Integer, DatagramPacket> packets,
+	DatagramSocket sock, int maxSN) throws IOException, InterruptedException
 	{
-		int sent = 0;
-		int sentPkts = ackListener.acked.size(); //assume that all acked packets
-		// up to now are sent
+		int sent = 0;              // counter for the number of bytes sent
+		int inFlight = 0;          // count of packets in flight
+		int index = 0;             // index in the map of packets
+		int blockCount = 0;
+		boolean slowDown = false;
+		boolean canSend = true;
+		Vector<Integer> acked = ackListener.acked;
+	
+		while (true) {
+			int i = 0; // index in the acked vector
+			while (i < acked.size()) {
+				canSend = true;
+				int ackedSN = acked.remove(i);
+				packets.remove(ackedSN);
+				if (packets.isEmpty())
+					return sent;
+				--inFlight;
+				++i;
+			}
 
-		for (int sn = 0; sn < max; sn++) {
 			DatagramPacket datagram;
-			datagram = map.get(sn);
-			if (datagram == null)
-				continue; // get another packet
-
-			sock.send(datagram);
-			sent += datagram.getLength();
-			sentPkts++;
-
-			if (MICHELE_MODE == true)
-				Thread.sleep(SENDER_PAUSE);
-			else if ((sentPkts - ackListener.acked.size()) > WINDOW_SIZE) {
-				// busy-wait for the missing acks
-				while ((ackListener.acked.size() - sentPkts) > 0)
-				{/* do nothing */}
-				//break; // start retransmission phase
+			do {
+				datagram = packets.get(index);
+				++index;
+				index = index % maxSN;
+			} while (datagram == null);
+			
+			if ((inFlight < WINDOW_SIZE) || (canSend == true) 
+				|| (blockCount > MAX_BLOCK)) {
+				sock.send(datagram);
+				canSend = false;
+				blockCount = 0;
+				sent += datagram.getLength();
+				++inFlight;
+			} else {
+				++blockCount;
 			}
 		}
-		return sent;
 	}
 
 	private static DatagramPacket craftPacket(byte[] payload, int seqNum) {
