@@ -1,10 +1,10 @@
-\documentclass[10pt,twocolumn]{article}
+\documentclass[10pt,onecolumn]{article}
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %			AZ' STANDARD NEWCOMMANDS
 %%%%%%%%%%%%%%%%%%%%%%%%%
-\usepackage[english]{babel} 
+\usepackage[english]{babel}
 \usepackage[T1]{fontenc}
-\usepackage{cite, url,color} % Citation numbers being automatically sorted and properly "compressed/ranged". 
+\usepackage{cite, url,color} % Citation numbers being automatically sorted and properly "compressed/ranged".
 %\usepackage{pgfplots}
 \usepackage{graphics,amsfonts}
 \usepackage[pdftex]{graphicx}
@@ -55,7 +55,7 @@
 \newcommand{\m}{\mathrm{m}}
 \newcommand{\mmin}[1]{{\min\left\{#1\right\}}}
 \newcommand{\mmax}[1]{{\max\left\{#1\right\}}}
-\newcommand{\id}[1]{\mathbf{1}\(#1\)} % Unit function  
+\newcommand{\id}[1]{\mathbf{1}\(#1\)} % Unit function
 \newcommand{\Heav}[1]{H\left(#1\right)} % Heaviside function
 \newcommand{\eps}{\varepsilon}
 \newcommand{\rect}[1]{\mathrm{rect}\!\left(#1\right)}
@@ -65,12 +65,12 @@
 \newcommand{\me}[2]{\left[ {#1} \right]_{(#2)}} % Submatrix \me{P}{i,j} produces [P]_{i,j} and denotes the element in the i-th row and j-th column of P
 \newcommand{\vv}[1]{\left[ {#1} \right]} % Submatrix \vv{a,b,c} produces [a,b,c]
 
-\newcommand{\Set}[1]{{\C #1}} 
-\newcommand{\Setd}[2]{\Set{#1}=\left\{#2\right\}}  % Set definition: \Set{S}{0,1,2} produces S={01,2,} where S is in mathcal 
+\newcommand{\Set}[1]{{\C #1}}
+\newcommand{\Setd}[2]{\Set{#1}=\left\{#2\right\}}  % Set definition: \Set{S}{0,1,2} produces S={01,2,} where S is in mathcal
 
 \newcommand{\mat}[1]{{\hbox{\textbf{#1}}}}
 \newcommand{\ei}[1]{{\mat{e}_{#1}}}   % all zero vector except in the $#1$-th element which is one
-\newcommand{\ind}[1]{\mathbf{\chi}\left\{#1\right\}} % Indicator function \ind{A}=1 if A is true, \ind{A}=0 otherwise. 
+\newcommand{\ind}[1]{\mathbf{\chi}\left\{#1\right\}} % Indicator function \ind{A}=1 if A is true, \ind{A}=0 otherwise.
 
 % FORMATTING
 \newcommand{\ie}{i.e.,\,}
@@ -89,16 +89,51 @@
 \date{}
 \maketitle
 
+\section{Introduction}
+Is this really needed? A new protocol for file transfer - over UDP - with a bad channel in the middle. Such fun! \\
+
 \section{Protocol description}
 blabla\\
 Some flowcharts
-
-\section{Performance analysis}
+Define DR, DS, TC
 Compare HIPSTER with stop and wait and with a simple delay between packets.
 Tell them we tried to use the delay before the poor man's sliding window.
+\begin{figure}[htp]
+  \centering
+  \subfigure[DS flowchart]{\includegraphics[width=0.45\linewidth, keepaspectratio]{../Documentation/sender_flowchart.pdf}}
+  \subfigure[DR flowchart]{\includegraphics[width=0.45\linewidth, keepaspectratio]{../Documentation/receiver_flowchart.pdf}}
+  \caption{HIPSTER protocol flowchart}
+  \label{fig:flowchart}
+\end{figure}
 
-\section{Actual result}
-The HIPSTER protocol rocks!
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width = 0.9\linewidth, keepaspectratio]{images/packet_structure.pdf}
+  \caption{HIPSTER packet structure}
+  \label{fig:header}
+\end{figure}
+
+\section{Transport Channel test results}
+The Transport Channel (TC) module simulates a bad channel among the DS and DR. It drops received UDP packets of length $L$ with probability $P_{drop} = 1 - \exp(-L/1024)$ and forward the remaining ones with a delay distribuited according to an expontial random variable with mean $1024/\ln(L)$. \\
+The TC was tested in loopback, by measuring the delay between the transmission of a packet by DS and its reception at DR and the ratio between sent and received packets. The payload of UDP packet used in this test was in the range from 12 byte (HIPSTER header length, thus the size of an ACK) to 1012 byte (actual size of HIPSTER packets). Each measurement was taken 10 times. The results are in figure~\ref{fig:TCstats}. The TC follows accurately the theoretical model, the few discrepancies are related to the Java random number generator and the finiteness of measurements. The distribution of the delays introduced by the TC in a transmission fits the required exponential RV according to the Kolmogorov-Smirnov test and the comparison of the cumulative distributive functions (CDF) of the two can be seen in figure~\ref{fig:CDF}.
+%this second figure can be omitted
+\begin{figure}[htp]
+  \centering
+  \subfigure[Dropping probability]{\includegraphics[width=0.45\linewidth, keepaspectratio]{images/pDrop.pdf}}
+  \subfigure[Mean delay]{\includegraphics[width=0.45\linewidth, keepaspectratio]{images/delayChannel.pdf}}
+  \caption{TC statistics}
+  \label{fig:TCstats}
+\end{figure}
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width = 0.45\linewidth, keepaspectratio]{images/cdfChannel.pdf}
+  \caption{CDF of the delays introduced by TC, $L_{UDP} = 1012$ byte}
+  \label{fig:CDF}
+\end{figure}
+
+
+\section{Performance analysis}
+
 
 \section{Concusion}
 O RLY? YUP!
