@@ -125,9 +125,11 @@ public class Receiver {
       }
       else {
         // Add the packet to the map using the SN as key
-        map.put(sn, data);
-        long relativeTime = System.currentTimeMillis() - startTime;
-        System.out.println(relativeTime + " : " + map.size() + " received packets");
+        if(null == map.put(sn, data)) {
+          //print only if it is the first insertion
+          long relativeTime = System.currentTimeMillis() - startTime;
+          System.out.println(relativeTime + " : " + map.size() + " received packets");
+        }
       }
 
       // Craft the ACK
