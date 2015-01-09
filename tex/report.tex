@@ -35,6 +35,8 @@
 % make sections titles smaller to save space
 \usepackage{sectsty}
 \sectionfont{\large}
+% enable the use of 'compactitem', a smaller 'itemize'
+\usepackage{paralist}
 
 \setlength\parindent{0pt}
 \linespread{1}
@@ -89,14 +91,33 @@
 \date{}
 \maketitle
 
-\section{Introduction}
-Is this really needed? A new protocol for file transfer - over UDP - with a bad channel in the middle. Such fun! \\
-
 \section{Protocol description}
-blabla\\
-Some flowcharts
-Define DR, DS, TC
-Compare HIPSTER with stop and wait and with a simple delay between packets.
+\begin{figure}[htp]
+	\centering
+    \includegraphics[height=0.15\textheight]{tex/images/packet_structure.pdf}
+	\caption{HIPSTER packet structure}
+	\label{fig:header}
+\end{figure}
+The packet structure has been designed in order to add the minimum overhead,
+while providing all the functionality needed by the protocol.
+
+Destination IP and port are needed for packet forwarding within the channel
+and by the receiver for replying to the sender. Moreover the size of the
+payload was included to ease the parsing of the packet at the receiving side.
+Finally \texttt{CODE} and \texttt{SEQUENCE NUMBER} are used for signalling
+and error recovery.
+
+The following values are used for the code:
+\begin{compactitem}
+\item 0 means a regular data packet
+\item 1 carries an ACK, the sequence number received is the same as the packet
+	being ACKed
+\item 2 signals the end of transmission (ETX). It is issued by the sender and
+	ACKed by the receiver
+\end{compactitem}
+
+Define DR, DS, TC\\
+Compare HIPSTER with stop and wait and with a simple delay between packets.\\
 Tell them we tried to use the delay before the poor man's sliding window.
 \begin{figure}[htp]
   \centering
@@ -104,13 +125,6 @@ Tell them we tried to use the delay before the poor man's sliding window.
   \subfigure[DR flowchart]{\includegraphics[width=0.45\linewidth, keepaspectratio]{Documentation/receiver_flowchart.pdf}}
   \caption{HIPSTER protocol flowchart}
   \label{fig:flowchart}
-\end{figure}
-
-\begin{figure}[htp]
-  \centering
-  \includegraphics[width = 0.9\linewidth, keepaspectratio]{tex/images/packet_structure.pdf}
-  \caption{HIPSTER packet structure}
-  \label{fig:header}
 \end{figure}
 
 \section{Transport Channel test results}
