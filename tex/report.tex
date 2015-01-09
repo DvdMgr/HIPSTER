@@ -100,15 +100,15 @@ Compare HIPSTER with stop and wait and with a simple delay between packets.
 Tell them we tried to use the delay before the poor man's sliding window.
 \begin{figure}[htp]
   \centering
-  \subfigure[DS flowchart]{\includegraphics[width=0.45\linewidth, keepaspectratio]{../Documentation/sender_flowchart.pdf}}
-  \subfigure[DR flowchart]{\includegraphics[width=0.45\linewidth, keepaspectratio]{../Documentation/receiver_flowchart.pdf}}
+  \subfigure[DS flowchart]{\includegraphics[width=0.45\linewidth, keepaspectratio]{Documentation/sender_flowchart.pdf}}
+  \subfigure[DR flowchart]{\includegraphics[width=0.45\linewidth, keepaspectratio]{Documentation/receiver_flowchart.pdf}}
   \caption{HIPSTER protocol flowchart}
   \label{fig:flowchart}
 \end{figure}
 
 \begin{figure}[htp]
   \centering
-  \includegraphics[width = 0.9\linewidth, keepaspectratio]{images/packet_structure.pdf}
+  \includegraphics[width = 0.9\linewidth, keepaspectratio]{tex/images/packet_structure.pdf}
   \caption{HIPSTER packet structure}
   \label{fig:header}
 \end{figure}
@@ -119,14 +119,14 @@ The TC was tested in loopback, by measuring the delay between the transmission o
 %this second figure can be omitted
 \begin{figure}[htp]
   \centering
-  \subfigure[Dropping probability]{\includegraphics[width=0.45\linewidth, keepaspectratio]{images/pDrop.pdf}}
-  \subfigure[Mean delay]{\includegraphics[width=0.45\linewidth, keepaspectratio]{images/delayChannel.pdf}}
+  \subfigure[Dropping probability]{\includegraphics[width=0.45\linewidth, keepaspectratio]{tex/images/pdrop.pdf}}
+  \subfigure[Mean delay]{\includegraphics[width=0.45\linewidth, keepaspectratio]{tex/images/delayChannel.pdf}}
   \caption{TC statistics}
   \label{fig:TCstats}
 \end{figure}
 \begin{figure}[htp]
   \centering
-  \includegraphics[width = 0.45\linewidth, keepaspectratio]{images/cdfChannel.pdf}
+  \includegraphics[width = 0.45\linewidth, keepaspectratio]{tex/images/cdfChannel.pdf}
   \caption{CDF of the delays introduced by TC, $L_{UDP} = 1012$ byte}
   \label{fig:CDF}
 \end{figure}
