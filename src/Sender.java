@@ -7,6 +7,7 @@
 import java.net.*; // Socket and datagram stuff
 import java.io.*;
 import java.util.*; // Vector Arrays and others
+import java.util.concurrent.*; // BlockingQueue and more
 
 public class Sender {
 	private static final String USAGE = "USAGE:\n\t" +
@@ -157,18 +158,17 @@ public class Sender {
 		int blockCount = 0;
 		boolean slowDown = false;
 		boolean canSend = true;
-		Vector<Integer> acked = ackListener.acked;
+		BlockingQueue<Integer> acked = ackListener.acked;
 	
 		while (true) {
-			int i = 0; // index in the acked vector
-			while (i < acked.size()) {
+			while (!acked.isEmpty()) {
 				canSend = true;
-				int ackedSN = acked.remove(i);
+				int ackedSN = acked.take();
 				packets.remove(ackedSN);
 				if (packets.isEmpty())
 					return sent;
+
 				--inFlight;
-				++i;
 			}
 
 			DatagramPacket datagram;
@@ -216,7 +216,7 @@ public class Sender {
 class ListenerThread extends Thread {
 
 	private DatagramSocket rSock;
-	public Vector<Integer> acked;
+	public BlockingQueue<Integer> acked;
 	private boolean run = true;
 
 	ListenerThread() {
@@ -226,7 +226,7 @@ class ListenerThread extends Thread {
 	ListenerThread(DatagramSocket theSocket) throws SocketException {
 		rSock = theSocket;
 		rSock.setSoTimeout(10);
-		acked = new Vector<Integer>();
+		acked = new LinkedBlockingQueue<Integer>();
 	}
 
 	void stopIt() {
@@ -242,7 +242,7 @@ class ListenerThread extends Thread {
 				rSock.receive(received);
 				HipsterPacket ack = new HipsterPacket().fromDatagram(received);
 				if (ack.isAck())
-					acked.add(ack.getSequenceNumber());
+					acked.put(ack.getSequenceNumber());
 			} catch (SocketTimeoutException soex) {
 				// this is something expected. just ignore it
 			} catch (Exception ex) {
