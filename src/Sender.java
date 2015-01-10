@@ -31,7 +31,7 @@ public class Sender {
 	 * The sender waits this many times before sending a packet anyway.
 	 * This avoids deadlocks and waiting too-much.
 	 */
-	private static final int MAX_BLOCK = 1024;
+	private static final int MAX_BLOCK = 128;
 	/*
 	 * Number of retries for sending the ETX packet
 	 */
