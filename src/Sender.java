@@ -160,44 +160,36 @@ public class Sender {
 	private static int sendAll(Map<Integer, DatagramPacket> packets,
 	DatagramSocket sock, int maxSN) throws IOException, InterruptedException
 	{
-		int sent = 0;              // counter for the number of bytes sent
-		int inFlight = 0;          // count of packets in flight
-		int index = 0;             // index in the map of packets
-		int blockCount = 0;
+		int sent = 0;         // counter for the number of bytes sent
+		int index = 0;        // index in the map of packets
+		int lastMissing = -1; // the biggest missing packet
 		boolean slowDown = false;
 		boolean canSend = true;
 		BlockingQueue<Integer> acked = ackListener.acked;
 
 		while (true) {
 			while (!acked.isEmpty()) {
-				canSend = true;
 				int ackedSN = acked.take();
-				packets.remove(ackedSN);
+				packets.remove(ackedSN - 1);
 				if (packets.isEmpty())
 					return sent;
-
-				--inFlight;
+				if(ackedSN > lastMissing)
+					lastMissing = ackedSN;
 			}
 
-			DatagramPacket datagram;
-			do {
-				datagram = packets.get(index);
-				++index;
-				index = index % maxSN;
-			} while (datagram == null);
-
-			if ((inFlight < WINDOW_SIZE) || (canSend == true)
-				|| (blockCount > MAX_BLOCK)) {
-				sock.send(datagram);
-				canSend = false;
-				blockCount = 0;
-				sent += datagram.getLength();
-				++inFlight;
-			} else {
-				++blockCount;
-				// ideally we should wait a RTT here.
-				// Not waiting works a treat so who cares!
+			if ((index - lastMissing) > WINDOW_SIZE)
+			{ // slow down and retransmit
+				Thread.sleep(10);
+				index = lastMissing;
 			}
+			
+			DatagramPacket datagram = packets.get(index);
+			System.out.println("\rlastMissing: " + lastMissing + " sending: " + index);
+			sock.send(datagram);
+			++index;
+			if (index > maxSN)
+				index = lastMissing;
+			sent += datagram.getLength();
 		}
 	}
 
