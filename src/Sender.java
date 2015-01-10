@@ -26,12 +26,14 @@ public class Sender {
 	 * If more than this number of packets are still not acked then enter
 	 * a slow phase that sends a packet every ACK.
 	 */
-	private static final int WINDOW_SIZE = 64;   // Packets
+	private static final int WINDOW_SIZE = 128;   // Packets
 	/*
-	 * The sender waits this many times before sending a packet anyway.
-	 * This avoids deadlocks and waiting too-much.
+	 * When the window expire the sender starts a retransmission.
+	 * Before starting a retransmission give the receiver some time to breath
+	 * and empty its buffes. The amount of time to wait is controlled by this
+	 * variable.
 	 */
-	private static final int MAX_BLOCK = 128;
+	private static final int WINDOW_WAIT = 10;	// ms
 	/*
 	 * Number of retries for sending the ETX packet
 	 */
@@ -162,32 +164,32 @@ public class Sender {
 	{
 		int sent = 0;         // counter for the number of bytes sent
 		int index = 0;        // index in the map of packets
-		int lastMissing = -1; // the biggest missing packet
-		boolean slowDown = false;
-		boolean canSend = true;
+		int lastMissing = 0; // the biggest missing packet
 		BlockingQueue<Integer> acked = ackListener.acked;
 
 		while (true) {
 			while (!acked.isEmpty()) {
 				int ackedSN = acked.take();
 				packets.remove(ackedSN - 1);
-				if (packets.isEmpty())
+				if (ackedSN >= maxSN) // we have finished!
 					return sent;
 				if(ackedSN > lastMissing)
 					lastMissing = ackedSN;
+				if(index < lastMissing)
+					index = lastMissing;
 			}
 
 			if ((index - lastMissing) > WINDOW_SIZE)
 			{ // slow down and retransmit
-				Thread.sleep(10);
+				Thread.sleep(WINDOW_WAIT); 
 				index = lastMissing;
 			}
 			
 			DatagramPacket datagram = packets.get(index);
-			System.out.println("\rlastMissing: " + lastMissing + " sending: " + index);
+			System.out.println("\rlastMissing: " + lastMissing + " sending: " + index + " / " + maxSN);
 			sock.send(datagram);
 			++index;
-			if (index > maxSN)
+			if (index == maxSN)
 				index = lastMissing;
 			sent += datagram.getLength();
 		}
@@ -225,12 +227,13 @@ class ListenerThread extends Thread {
 
 	ListenerThread(DatagramSocket theSocket) throws SocketException {
 		rSock = theSocket;
-		rSock.setSoTimeout(10);
+		rSock.setSoTimeout(20);
 		acked = new LinkedBlockingQueue<Integer>();
 	}
 
 	void stopIt() {
 		run = false;
+		this.interrupt(); // STOP NOW!
 	}
 
 	public void run() {
@@ -245,6 +248,8 @@ class ListenerThread extends Thread {
 					acked.put(ack.getSequenceNumber());
 			} catch (SocketTimeoutException soex) {
 				// this is something expected. just ignore it
+			} catch (InterruptedException iex) {
+				// also this is expected
 			} catch (Exception ex) {
 				System.out.println("WARNING: " + ex);
 				System.out.println("The exception will be bravely ignored.");
