@@ -31,7 +31,7 @@ public class Sender {
 	 * The sender waits this many times before sending a packet anyway.
 	 * This avoids deadlocks and waiting too-much.
 	 */
-	private static final int MAX_BLOCK = 128;
+	private static final int MAX_BLOCK = 1024;
 	/*
 	 * Number of retries for sending the ETX packet
 	 */
@@ -141,7 +141,7 @@ public class Sender {
 			}
 			--retries;
 			if (retries == 0)
-				Systyem.out.println("ETX timed out.");
+				System.out.println("ETX timed out.");
 		}
 		// print the collected stats in a human readable manner
 		long elapsed = System.currentTimeMillis() - startTime;
@@ -167,7 +167,7 @@ public class Sender {
 		boolean slowDown = false;
 		boolean canSend = true;
 		BlockingQueue<Integer> acked = ackListener.acked;
-	
+
 		while (true) {
 			while (!acked.isEmpty()) {
 				canSend = true;
@@ -185,8 +185,8 @@ public class Sender {
 				++index;
 				index = index % maxSN;
 			} while (datagram == null);
-			
-			if ((inFlight < WINDOW_SIZE) || (canSend == true) 
+
+			if ((inFlight < WINDOW_SIZE) || (canSend == true)
 				|| (blockCount > MAX_BLOCK)) {
 				sock.send(datagram);
 				canSend = false;
