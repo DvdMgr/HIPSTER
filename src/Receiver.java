@@ -26,6 +26,11 @@ public class Receiver {
   static InetAddress sourceAddress;                 // TODO Set these dynamically?
   static InetAddress channelAddress;
 
+  // This checklist is used to keep track of which packets we have received
+  static boolean[] checklist = new boolean[10];
+
+  static boolean expectedSN = false;
+
   private static final String USAGE = "USAGE:\n\t" +
   "Receiver [-c channel_IP] [-d destination_IP:Port] [-p Port] [-f output_file]" +
   "\n\nBy default all addresses are 'localhost'.\n" +
@@ -64,6 +69,8 @@ public class Receiver {
         // the next string is the filename
         i++;
         filename = args[i];
+      } else if ("-expectedSN".equals(args[i])) {
+        expectedSN = true;
       }
     }
 
@@ -73,9 +80,6 @@ public class Receiver {
 
     // Prepare the map that will be used to store the file
     Map<Integer, byte[]> map = new HashMap<Integer, byte[]>();
-
-    // This checklist is used to keep track of which packets we have received
-    boolean[] checklist = new boolean[10];
 
     // Variables that keep track of the speed at which we receive data
     long startTime = System.currentTimeMillis();
@@ -241,7 +245,21 @@ public class Receiver {
     hipster.setDestinationAddress(sourceAddress);   // Source address
     hipster.setDestinationPort(hipsterSendPort);    // Source port number
     hipster.setCode(HipsterPacket.ACK);
-    hipster.setSequenceNumber(sequenceNumber);
+
+    if (expectedSN) {
+      // Get the next expected sequence number
+      int sn = 0;
+      boolean search = true;
+      for (int i = 0; i < checklist.length && search; i++)
+        if (checklist[i] == false) {
+          sn = i;
+          search = false;
+        }
+      hipster.setSequenceNumber(sn);
+      System.out.println("Sending request for sn: "+sn);
+    }
+    else hipster.setSequenceNumber(sequenceNumber);
+
 
     return hipster.toDatagram();
   }
