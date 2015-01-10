@@ -32,6 +32,10 @@ public class Sender {
 	 * This avoids deadlocks and waiting too-much.
 	 */
 	private static final int MAX_BLOCK = 128;
+	/*
+	 * Number of retries for sending the ETX packet
+	 */
+	private static final int ETX_RETRIES = 10;
 
 	// runtime options. See USAGE variable
 	private static String fileName = "";
@@ -109,6 +113,7 @@ public class Sender {
 		UDPSock.setSoTimeout(2500); // time to wait for the ack of ETX
 		// send an ETX packet to close the connection
 		boolean closed = false;
+		int retries = ETX_RETRIES;
 
 		HipsterPacket pkt = new HipsterPacket();
 		pkt.setCode(HipsterPacket.ETX);
@@ -119,7 +124,7 @@ public class Sender {
 		etx.setAddress(chAddr);
 		etx.setPort(CHANNEL_PORT);
 
-		while (!closed) {
+		while ((!closed) && (retries > 0)) {
 			UDPSock.send(etx);
 			dataSent += HipsterPacket.headerLength;
 			try {
@@ -134,6 +139,9 @@ public class Sender {
 			} catch (SocketTimeoutException soTomeout) {
 				// do nothing
 			}
+			--retries;
+			if (retries == 0)
+				Systyem.out.println("ETX timed out.");
 		}
 		// print the collected stats in a human readable manner
 		long elapsed = System.currentTimeMillis() - startTime;
