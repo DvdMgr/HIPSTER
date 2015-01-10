@@ -33,7 +33,7 @@ public class Sender {
 	 * and empty its buffes. The amount of time to wait is controlled by this
 	 * variable.
 	 */
-	private static final int WINDOW_WAIT = 15;	// ms
+	private static final int WINDOW_WAIT = 5;	// ms
 	/*
 	 * Number of retries for sending the ETX packet
 	 */
@@ -165,6 +165,8 @@ public class Sender {
 		int sent = 0;         // counter for the number of bytes sent
 		int index = 0;        // index in the map of packets
 		int lastMissing = 0; // the biggest missing packet
+		int window = WINDOW_SIZE;
+		int dupACK = 0;
 		BlockingQueue<Integer> acked = ackListener.acked;
 
 		while (true) {
@@ -173,18 +175,26 @@ public class Sender {
 				packets.remove(ackedSN - 1);
 				if (ackedSN >= maxSN) // we have finished!
 					return sent;
-				if(ackedSN > lastMissing)
+				if(ackedSN > lastMissing) {
 					lastMissing = ackedSN;
+					dupACK = 0;
+					window = WINDOW_SIZE;
+				} else
+					dupACK++;
 				if(index < lastMissing)
 					index = lastMissing;
 			}
 
-			if ((index - lastMissing) > WINDOW_SIZE)
+			if (dupACK >= 2)
 			{ // slow down and retransmit
-				Thread.sleep(WINDOW_WAIT); 
+				dupACK = 0;
 				index = lastMissing;
+				if (window > 1)
+					window = window / 2;
+			}else if ((index - lastMissing) > window) {
+				Thread.sleep(WINDOW_WAIT);
 			}
-			
+
 			DatagramPacket datagram = packets.get(index);
 			sock.send(datagram);
 			++index;
