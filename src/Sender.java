@@ -33,7 +33,7 @@ public class Sender {
 	 * and empty its buffes. The amount of time to wait is controlled by this
 	 * variable.
 	 */
-	private static final int WINDOW_WAIT = 10;	// ms
+	private static final int WINDOW_WAIT = 15;	// ms
 	/*
 	 * Number of retries for sending the ETX packet
 	 */
@@ -186,7 +186,6 @@ public class Sender {
 			}
 			
 			DatagramPacket datagram = packets.get(index);
-			System.out.println("\rlastMissing: " + lastMissing + " sending: " + index + " / " + maxSN);
 			sock.send(datagram);
 			++index;
 			if (index == maxSN)
