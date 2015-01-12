@@ -119,7 +119,7 @@ The following values are used for the code:
 Define DR, DS, TC\\
 Compare HIPSTER with stop and wait and with a simple delay between packets.\\
 Tell them we tried to use the delay before the poor man's sliding window.
-\begin{figure}[htp]
+\begin{figure}[h]
   \centering
   \subfigure[DS flowchart]{\includegraphics[width=0.45\linewidth, keepaspectratio]{Documentation/sender_flowchart.pdf}}
   \subfigure[DR flowchart]{\includegraphics[width=0.45\linewidth, keepaspectratio]{Documentation/receiver_flowchart.pdf}}
@@ -131,7 +131,7 @@ Tell them we tried to use the delay before the poor man's sliding window.
 The Transport Channel (TC) module simulates a bad channel among the DS and DR. It drops received UDP packets of length $L$ with probability $P_{drop} = 1 - \exp(-L/1024)$ and forward the remaining ones with a delay distribuited according to an expontial random variable with mean $1024/\ln(L)$. \\
 The TC was tested in loopback, by measuring the delay between the transmission of a packet by DS and its reception at DR and the ratio between sent and received packets. The payload of UDP packet used in this test was in the range from 12 byte (HIPSTER header length, thus the size of an ACK) to 1012 byte (actual size of HIPSTER packets). Each measurement was taken 10 times. The results are in figure~\ref{fig:TCstats}. The TC follows accurately the theoretical model, the few discrepancies are related to the Java random number generator and the finiteness of measurements. The distribution of the delays introduced by the TC in a transmission fits the required exponential RV according to the Kolmogorov-Smirnov test and the comparison of the cumulative distributive functions (CDF) of the two can be seen in figure~\ref{fig:CDF}.
 %this second figure can be omitted
-\begin{figure}[htp]
+\begin{figure}[h]
   \centering
   \subfigure[Dropping probability]{\includegraphics[width=0.45\linewidth, keepaspectratio]{tex/images/pdrop.pdf}}
   \subfigure[Mean delay]{\includegraphics[width=0.45\linewidth, keepaspectratio]{tex/images/delayChannel.pdf}}
@@ -145,9 +145,30 @@ The TC was tested in loopback, by measuring the delay between the transmission o
   \label{fig:CDF}
 \end{figure}
 
-
 \section{Performance analysis}
 
+\section{Actual Result}
+The transfer rate for files with different sizes was analyzed. The following
+table summarizes the mean over five runs for the transfer time and speed for
+\texttt{localhost}. A Local Area Network yield similar results.
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c|}
+	Size (MB) & Time (s) & Speed (MB/s)\\ \hline
+	100       & 18.87    & 5.3  \\
+	50        & 10.08    & 4.96 \\
+	10        & 3.25     & 3.08 \\
+	5         & 2.08     & 2.4  \\
+	1         & 0.83     & 1.2  \\ \hline
+\end{tabular}
+\end{table}
+
+The transfer rate over three different ADSL links has also been tested. In
+this scenario the algorithm needed some tuning of the \texttt{MAX\_BLOCK}
+constant due to excessive congestion. Such variable has to be adapted to
+different networks. Bigger values (in the order of $10^5$) are better suited
+for slow networks with longer RTTs. Smaller values instead (e.g.\ the default
+$128$) are better suited to fast networks with RTT of about $1ms$.
 
 \section{Concusion}
 O RLY? YUP!
