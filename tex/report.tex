@@ -154,13 +154,25 @@ table summarizes the mean over five runs for the transfer time and speed for
 \begin{table}[H]
 \centering
 \begin{tabular}{|c|c|c|}
-	Size (MB) & Time (s) & Speed (MB/s)\\ \hline
-	100       & 18.87    & 5.3  \\
+	Size (MB) & Mean time (s) & Mean goodput (MB/s)\\ \hline
+  500       & 64.92    & 8.07  \\
+  200       & 23.86    & 8.78  \\
+	100       & 13.48    & 7.78  \\
 	50        & 10.08    & 4.96 \\
 	10        & 3.25     & 3.08 \\
 	5         & 2.08     & 2.4  \\
 	1         & 0.83     & 1.2  \\ \hline
 \end{tabular}
+\label{table:ourChannel}
+\end{table}
+
+\begin{tabular}{|c|c|c|}
+  Size (MB) & Mean time (s) & Mean goodput (MB/s)\\ \hline
+  500       & 62.63    & 8.37  \\
+  200       & 23.54    & 8.9  \\
+  100       & 14.04    & 7.47  \\
+\end{tabular}
+\label{table:anotherChannel}
 \end{table}
 
 The transfer rate over three different ADSL links has also been tested. In
