@@ -92,11 +92,14 @@
 \maketitle
 
 \section{Introduction}
-In this paper we will describe HIPSTER protocol, a file transfer protocol designed to work upon UDP transport layer. The aim of the protocol is to minimize transfer time over an unreliable Transport Channel (TC), which introduces delay and drops packet according to a certain model. In the first section, the protocol will be described. Then the TC used with the system will be tested to show that it works as specified by the model. In the last section test results will be presented and we will show that the system reaches low transfer time.
+In this paper we will describe the HIPSTER protocol, a file transfer protocol designed to work on top of the UDP transport layer. The aim of the protocol is to minimize transfer time over an unreliable Transport Channel (TC), which introduces delay and drops packet according to a certain model. In the first section, the protocol will be described. Then, we will show the results of some tests for the TC, demonstrating that it works as specified by the model. In the last section test results will be presented and we will show that the system reaches low transfer times.
 
 \section{Protocol description}
 
 Define DR, DS, TC\\
+
+The Receiver is in charge of handling ACK transmission and the reordering of the received packets. The protocol assumes the random delays and drops introduced by the channel would make in-order delivery extremely slow, so the decision of shifting the burden of reordering on the receiver was made. The Receiver listens continuously for new packets. Once it receives a packet, it checks its CODE. If the CODE is DATA, the DR stores the packet in a list and sends an ACK to the Sender through the Channel. In the case the received packet contains an ETX (end of transmission) code, the Receiver acknowledges it, then proceeds to reorder the packets and finally writes the received file to disk. The ACKs crafted by the Receiver contain an empty payload in order to minimize the channel drop probability, and the sequence number refers to the single packet the Receiver intends to acknowledge, in order to inform the Sender that retransmission of that portion is not necessary.
+
 Compare HIPSTER with stop and wait and with a simple delay between packets.\\
 Tell them we tried to use the delay before the poor man's sliding window.
 
