@@ -95,21 +95,23 @@
 
 \begin{figure}[htp]
   \centering
-  \includegraphics[width=0.7\columnwidth, keepaspectratio]{Documentation/Sender.pdf}
-  \caption{HIPSTER protocol DS}
-  \label{fig:senderFlowchart}
-\end{figure}
-
-\columnbreak
-
-\begin{figure}[htp]
-  \centering
-  \includegraphics[width=0.95\columnwidth, keepaspectratio]{Documentation/Receiver.pdf}
+  \includegraphics[width=0.75\columnwidth, keepaspectratio]{Documentation/Receiver.pdf}
   \caption{HIPSTER protocol DR}
   \label{fig:receiverFlowchart}
 \end{figure}
 
-\columnbreak
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=0.75\columnwidth, keepaspectratio]{Documentation/Sender.pdf}
+  \caption{HIPSTER protocol DS}
+  \label{fig:senderFlowchart}
+\end{figure}
+
+
+
+
+
+
 
 \begin{figure}[htp]
 	\centering
@@ -210,5 +212,6 @@ for slow networks with longer RTTs. Smaller values instead (e.g.\ the default
 128) are better suited to fast networks with RTT of about 1 ms.
 
 \section{Concusion}
+The HIPSTER protocol was designed in order to work upon networks with high rtt and high packet loss. The theoretical analysis provided some tuning for its parameters, and tests with files of different sizes showed that the protocol can reach high goodput and low transfer time.
 O RLY? YUP!
 \end{document}
