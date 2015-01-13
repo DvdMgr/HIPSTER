@@ -149,7 +149,7 @@ public class Sender {
 		double overhead = 100.0 * (dataSent - dataRead) / dataRead;
 		System.out.printf("Bytes sent: %s (overhead %3.2f%%)\n", dataSent,
 			overhead);
-		System.out.println("Elapsed time: " + elapsed + "ms (" + speed +
+		System.out.println("Elapsed time: " + elapsed + " ms (" + speed +
 			"KBps)");
 	}
 

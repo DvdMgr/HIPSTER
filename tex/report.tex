@@ -1,4 +1,4 @@
-\documentclass[10pt,onecolumn]{article}
+\documentclass[10pt,twocolumn]{article}
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %			AZ' STANDARD NEWCOMMANDS
 %%%%%%%%%%%%%%%%%%%%%%%%%
@@ -92,9 +92,28 @@
 \maketitle
 
 \section{Protocol description}
+
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=0.7\columnwidth, keepaspectratio]{Documentation/Sender.pdf}
+  \caption{HIPSTER protocol DS}
+  \label{fig:senderFlowchart}
+\end{figure}
+
+\columnbreak
+
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=0.95\columnwidth, keepaspectratio]{Documentation/receiver_flowchart.pdf}
+  \caption{HIPSTER protocol DR}
+  \label{fig:receiverFlowchart}
+\end{figure}
+
+\columnbreak
+
 \begin{figure}[htp]
 	\centering
-    \includegraphics[height=0.15\textheight]{tex/images/packet_structure.pdf}
+    \includegraphics[width=0.95\columnwidth]{tex/images/packet_structure.pdf}
 	\caption{HIPSTER packet structure}
 	\label{fig:header}
 \end{figure}
@@ -119,28 +138,29 @@ The following values are used for the code:
 Define DR, DS, TC\\
 Compare HIPSTER with stop and wait and with a simple delay between packets.\\
 Tell them we tried to use the delay before the poor man's sliding window.
-\begin{figure}[h]
-  \centering
-  \subfigure[DS flowchart]{\includegraphics[width=0.45\linewidth, keepaspectratio]{Documentation/sender_flowchart.pdf}}
-  \subfigure[DR flowchart]{\includegraphics[width=0.45\linewidth, keepaspectratio]{Documentation/receiver_flowchart.pdf}}
-  \caption{HIPSTER protocol flowchart}
-  \label{fig:flowchart}
-\end{figure}
+
 
 \section{Transport Channel test results}
-The Transport Channel (TC) module simulates a bad channel among the DS and DR. It drops received UDP packets of length $L$ with probability $P_{drop} = 1 - \exp(-L/1024)$ and forward the remaining ones with a delay distribuited according to an expontial random variable with mean $1024/\ln(L)$. \\
-The TC was tested in loopback, by measuring the delay between the transmission of a packet by DS and its reception at DR and the ratio between sent and received packets. The payload of UDP packet used in this test was in the range from 12 byte (HIPSTER header length, thus the size of an ACK) to 1012 byte (actual size of HIPSTER packets). Each measurement was taken 10 times. The results are in figure~\ref{fig:TCstats}. The TC follows accurately the theoretical model, the few discrepancies are related to the Java random number generator and the finiteness of measurements. The distribution of the delays introduced by the TC in a transmission fits the required exponential RV according to the Kolmogorov-Smirnov test and the comparison of the cumulative distributive functions (CDF) of the two can be seen in figure~\ref{fig:CDF}.
+The Transport Channel (TC) module simulates a bad channel among the DS and DR. It drops received UDP packets of length $L$ with probability $P_{drop} = 1 - \exp(-L/1024)$ and forward the remaining ones with a delay distribuited according to an expontial random variable with mean $1024/\ln(L)$ ms. \\
+The TC was tested in loopback, by measuring the delay between the transmission of a packet by DS and its reception at DR and the ratio between sent and received packets. The payload of UDP packet used in this test was in the range from 12 byte (HIPSTER header length, thus the size of an ACK) to 1012 byte (actual size of HIPSTER packets). Each measurement was taken 10 times. The results are in figures~\ref{fig:pDrop} and~\ref{fig:delay}. The TC follows accurately the theoretical model, the few discrepancies are related to the Java random number generator and the finiteness of measurements. The distribution of the delays introduced by the TC in a transmission fits the required exponential RV according to the Kolmogorov-Smirnov test and the comparison of the cumulative distributive functions (CDF) of the two can be seen in figure~\ref{fig:CDF}.
 %this second figure can be omitted
 \begin{figure}[h]
   \centering
-  \subfigure[Dropping probability]{\includegraphics[width=0.45\linewidth, keepaspectratio]{tex/images/pdrop.pdf}}
-  \subfigure[Mean delay]{\includegraphics[width=0.45\linewidth, keepaspectratio]{tex/images/delayChannel.pdf}}
-  \caption{TC statistics}
-  \label{fig:TCstats}
+  \includegraphics[width=0.95\columnwidth, keepaspectratio]{tex/images/pdrop.pdf}
+  \caption{Dropping probability}
+  \label{fig:pDrop}
 \end{figure}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.95\columnwidth, keepaspectratio]{tex/images/delayChannel.pdf}
+  \caption{Mean TC delay}
+  \label{fig:delay}
+\end{figure}
+
 \begin{figure}[htp]
   \centering
-  \includegraphics[width = 0.45\linewidth, keepaspectratio]{tex/images/cdfChannel.pdf}
+  \includegraphics[width = 0.95\columnwidth, keepaspectratio]{tex/images/cdfChannel.pdf}
   \caption{CDF of the delays introduced by TC, $L_{UDP} = 1012$ byte}
   \label{fig:CDF}
 \end{figure}
@@ -148,29 +168,36 @@ The TC was tested in loopback, by measuring the delay between the transmission o
 \section{Performance analysis}
 
 \section{Actual Result}
-The transfer rate for files with different sizes was analyzed. The following
-table summarizes the mean over five runs for the transfer time and speed for
-\texttt{localhost}. A Local Area Network yield similar results.
-\begin{table}[H]
+The transfer rate for files with different sizes was analyzed. The
+table~\ref{table:ourChannel} summarizes the mean over five runs for the transfer time and speed for
+\texttt{localhost}, while the table~\ref{table:anotherChannel} reports the results of the same tests with another channel. A Local Area Network yield similar results.
+\begin{table}[h]
 \centering
 \begin{tabular}{|c|c|c|}
 	Size (MB) & Mean time (s) & Mean goodput (MB/s)\\ \hline
   500       & 64.92    & 8.07  \\
   200       & 23.86    & 8.78  \\
 	100       & 13.48    & 7.78  \\
-	50        & 10.08    & 4.96 \\
-	10        & 3.25     & 3.08 \\
-	5         & 2.08     & 2.4  \\
-	1         & 0.83     & 1.2  \\ \hline
+	50        & 7.83     & 6.7 \\
+	10        & 2.57     & 4.07 \\
+	5         & 1.55     & 3.39  \\
+	1         & 0.67     & 1.56  \\
 \end{tabular}
 \label{table:ourChannel}
 \end{table}
 
+\begin{table}[h]
+\centering
 \begin{tabular}{|c|c|c|}
   Size (MB) & Mean time (s) & Mean goodput (MB/s)\\ \hline
   500       & 62.63    & 8.37  \\
   200       & 23.54    & 8.9  \\
   100       & 14.04    & 7.47  \\
+  50        & 7.85     & 6.67 \\
+  10        & 2.4      & 4.34 \\
+  5         & 1.56     & 3.35 \\
+  1         & 0.67     & 1.56 \\
+
 \end{tabular}
 \label{table:anotherChannel}
 \end{table}
@@ -180,7 +207,7 @@ this scenario the algorithm needed some tuning of the \texttt{MAX\_BLOCK}
 constant due to excessive congestion. Such variable has to be adapted to
 different networks. Bigger values (in the order of $10^5$) are better suited
 for slow networks with longer RTTs. Smaller values instead (e.g.\ the default
-$128$) are better suited to fast networks with RTT of about $1ms$.
+128) are better suited to fast networks with RTT of about 1 ms.
 
 \section{Concusion}
 O RLY? YUP!
