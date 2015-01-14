@@ -8,9 +8,6 @@ import java.net.*;    // Sockets and Datagram utils
 import java.util.*;   // Maps and useful stuff
 import java.io.*;     // Support for writing files
 
-// TODO Clarify addresses and ports for the channel and the source.
-// TODO Decide whether to use a TreeMap or a HashMap followed by a TreeMap for sorting
-// TODO Clean up this mess
 public class Receiver {
 
   static String filename = "ReceivedFile";
@@ -23,7 +20,7 @@ public class Receiver {
 
   static final int MAXIMUM_DATAGRAM_SIZE = 2048;    // This buffer will be trimmed according to the size of the datagram
 
-  static InetAddress sourceAddress;                 // TODO Set these dynamically?
+  static InetAddress sourceAddress;
   static InetAddress channelAddress;
 
   private static final String USAGE = "USAGE:\n\t" +
@@ -32,39 +29,46 @@ public class Receiver {
   "The default port this program listens on is 65433.\n" +
   "The default port for the receiver is 65431.";
 
-  public static void main(String[] args) throws Exception { // TODO Refine Exception catching
+  public static void main(String[] args) throws SocketException, IOException, Exception {
 
     // By default these addresses are localhost.
-    sourceAddress = InetAddress.getLocalHost();
-    channelAddress = InetAddress.getLocalHost();
+    try {
+      sourceAddress = InetAddress.getLocalHost();
+      channelAddress = InetAddress.getLocalHost();
 
-    // Parse command line arguments
-    for(int i = 0; i < args.length; i++)
-    {
-      if ("-h".equals(args[i])) {
-        System.out.println(USAGE);
-        return;
-      } else if ("-c".equals(args[i])) {
-        // the next string is the channel address
-        i++;
-        channelAddress = InetAddress.getByName(args[i]);
-      } else if ("-d".equals(args[i])) {
-        // the next string is the destination address
-        i++;
-        String[] sep = args[i].split(":");
-        sourceAddress = InetAddress.getByName(sep[0]);
-        if (sep.length > 1) {
-          hipsterSendPort = Integer.parseInt(sep[1]);
+
+      // Parse command line arguments
+      for(int i = 0; i < args.length; i++)
+      {
+        if ("-h".equals(args[i])) {
+          System.out.println(USAGE);
+          return;
+        } else if ("-c".equals(args[i])) {
+          // the next string is the channel address
+          i++;
+          channelAddress = InetAddress.getByName(args[i]);
+        } else if ("-d".equals(args[i])) {
+          // the next string is the destination address
+          i++;
+          String[] sep = args[i].split(":");
+          sourceAddress = InetAddress.getByName(sep[0]);
+          if (sep.length > 1) {
+            hipsterSendPort = Integer.parseInt(sep[1]);
+          }
+        } else if ("-p".equals(args[i])) {
+          // the next string is my port
+          i++;
+          udpListenPort = Integer.parseInt(args[i]);
+        } else if ("-f".equals(args[i])) {
+          // the next string is the filename
+          i++;
+          filename = args[i];
         }
-      } else if ("-p".equals(args[i])) {
-        // the next string is my port
-        i++;
-        udpListenPort = Integer.parseInt(args[i]);
-      } else if ("-f".equals(args[i])) {
-        // the next string is the filename
-        i++;
-        filename = args[i];
       }
+    }
+    catch (UnknownHostException e) {
+      System.out.println("Unknown host: " + e.getMessage());
+      return;
     }
 
     // Initialize the UDP sockets
@@ -170,7 +174,7 @@ public class Receiver {
     // Order elements by adding received data in a treemap
     Map<Integer, byte[]> orderedMap = new TreeMap<Integer, byte[]>();
     orderedMap.putAll(map);
-    map = null;   // Free up memory space
+    map = null;   // Free up memory space using the GC
 
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
 
@@ -215,8 +219,8 @@ public class Receiver {
     * The datagram packet that is returned by this method has the data array of length equal to the nominal length
     * of its packet.
     */
-  private static DatagramPacket listenOnSocket(DatagramSocket socket) throws Exception {  // TODO Handle exception
-
+  private static DatagramPacket listenOnSocket(DatagramSocket socket) throws Exception {
+    
     // Create a generically big DatagramPacket
     byte[] receivedData = new byte[MAXIMUM_DATAGRAM_SIZE];
     DatagramPacket datagram = new DatagramPacket(receivedData, receivedData.length);
