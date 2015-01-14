@@ -186,10 +186,11 @@ The TC was tested in loopback, by measuring the delay between the transmission o
 \end{figure}
 
 \section{HIPSTER protocol test results}
-The transfer rate for files with different sizes was analyzed. The
-table~\ref{table:ourChannel} summarizes the mean over five runs for the transfer time and speed for
-\texttt{localhost}, while the table~\ref{table:anotherChannel} reports the
-results of the same tests with another channel, borrowed from a different group. \textit{Mean time} is the time from the beginning of the transmission at the Sender to the reception of the ACK for the ETX packet, while \textit{mean goodput} is file size over \textit{mean time}.
+The transfer rate for files with different sizes was analyzed.
+Table~\ref{table:ourChannel} summarizes the mean over five runs for the
+transfer time and speed over \texttt{localhost}, while
+Table~\ref{table:anotherChannel} reports the results of the same tests with
+another channel, borrowed from a different group. \textit{Mean time} is the time from the beginning of the transmission at the Sender to the reception of the ACK for the ETX packet, while \textit{mean goodput} is file size over \textit{mean time}.
 \begin{table}[h]
 \centering
 \begin{tabular}{|c|c|c|}
@@ -200,8 +201,9 @@ results of the same tests with another channel, borrowed from a different group.
 	50        & 7.83     & 6.7 \\
 	10        & 2.57     & 4.07 \\
 	5         & 1.55     & 3.39  \\
-	1         & 0.67     & 1.56  \\
+	1         & 0.67     & 1.56  \\ \hline
 \end{tabular}
+\caption{Mean transfer time and goodput with our channel}
 \label{table:ourChannel}
 \end{table}
 
@@ -215,9 +217,9 @@ results of the same tests with another channel, borrowed from a different group.
   50        & 7.85     & 6.67 \\
   10        & 2.4      & 4.34 \\
   5         & 1.56     & 3.35 \\
-  1         & 0.67     & 1.56 \\
-
+  1         & 0.67     & 1.56 \\ \hline
 \end{tabular}
+\caption{Mean transfer time and goodput with a channel from a different group}
 \label{table:anotherChannel}
 \end{table}
 
