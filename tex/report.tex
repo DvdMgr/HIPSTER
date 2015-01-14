@@ -94,7 +94,7 @@
 \maketitle
 
 \section{Introduction}
-In this report we will describe the HIPSTER protocol, a file transfer protocol designed to work on top of the UDP transport layer. The aim of the protocol is to minimize transfer time over an unreliable Transport Channel (TC), which introduces delay and drops packet according to a certain model. In the first section, the protocol will be described. Then, we will show the results of some tests for the TC, demonstrating that it works as specified by the model. In the last section test results will be presented and we will show that the system reaches low transfer times.
+In this report we will describe the HIPSTER protocol, a file transfer protocol designed to work on top of the UDP transport layer. The aim of the protocol is to minimize transfer time over an unreliable \texttt{Transport Channel} (TC), which introduces delay and drops packet according to a certain model. In the first section, the protocol will be described. Then, we will show the results of some tests for the TC, demonstrating that it works as specified by the model. In the last section test results will be presented and we will show that the system reaches low transfer times.
 
 \section{Protocol description}
 \begin{figure}[htp]
@@ -151,7 +151,7 @@ Every time an ACK is dequeued the corresponding packet is removed from the
 list of packets. Only when the list is empty the transmission is considered
 complete. At this time DS sends the ETX packet, which signals to the receiver
 that the transmission is over. If the corresponding ACK is received the sender
-will exit otherwise if a $2.5s$ timer expires the ETX is sent again.
+will exit otherwise if a $2.5$ s timer expires the ETX is sent again.
 
 The \texttt{Data Receiver} (DR) is in charge of handling ACK transmission and reordering the received packets. The protocol assumes the random delays and drops introduced by the channel would make in-order delivery extremely slow, so the decision of shifting the burden of reordering on the receiver was made. The DR listens continuously for new packets. Once it receives a packet, it checks its CODE. If the CODE is 0 (DATA), the DR stores the packet in a list and sends an ACK to the sender through the TC. In the case the received packet contains an ETX (end of transmission) code, the receiver acknowledges it, then proceeds to reorder the packets and finally writes the received file to disk. The ACKs crafted by the receiver contain an empty payload in order to minimize the channel drop probability, and the sequence number refers to the single packet the receiver intends to acknowledge, in order to inform the DS that retransmission of that portion is not necessary.
 
@@ -163,8 +163,8 @@ The \texttt{Data Receiver} (DR) is in charge of handling ACK transmission and re
 \end{figure}
 
 \section{Transport Channel test results}
-The Transport Channel (TC) module simulates a bad channel among the DS and DR. It drops received UDP packets of length $L$ with probability $P_{drop} = 1 - \exp(-L/1024)$ and forwards the remaining ones with a delay distributed according to an exponential random variable with mean $1024/\ln(L)$ ms. \\
-The TC was tested in loopback, by measuring the delay between the transmission of a packet by DS and its reception at DR. The ratio between sent and received packets was also measured. The payload of UDP packet used in this test is in the range from 12 byte (HIPSTER header length, thus the size of an ACK) to 1012 byte (actual size of HIPSTER packets). Each measurement was taken 10 times. The results are in figures~\ref{fig:pDrop} and~\ref{fig:delay}. The tests show that TC follows accurately the theoretical model, as the few discrepancies are related to the Java random number generator and the finiteness of measurements. The distribution of the delays introduced by the TC in a transmission fits the required exponential RV according to the Kolmogorov-Smirnov test and the comparison of the cumulative distributive functions (CDF) of the two can be seen in figure~\ref{fig:CDF}.
+The \texttt{Transport Channel} (TC) module simulates a bad channel among the DS and DR. It drops received UDP packets of length $L$ with probability $P_{drop} = 1 - \exp(-L/1024)$ and forwards the remaining ones with a delay distributed according to an exponential random variable with mean $1024/\ln(L)$ ms. \\
+The TC was tested in loopback, by measuring the delay between the transmission of a packet by DS and its reception at DR. The ratio between sent and received packets was also measured. The payload of UDP packet used in this test is in the range from 12 byte (HIPSTER header length, thus the size of an ACK) to 1012 byte (actual size of HIPSTER packets). Each measurement was taken 10 times. The results are in Figures~\ref{fig:pDrop} and~\ref{fig:delay}. The tests show that TC follows accurately the theoretical model, as the few discrepancies are related to the Java random number generator and the finiteness of measurements. The distribution of the delays introduced by the TC in a transmission fits the required exponential RV according to the Kolmogorov-Smirnov test and the comparison of the cumulative distributive functions (CDF) of the two can be seen in Figure~\ref{fig:CDF}.
 
 %this third figure can be omitted
 \begin{figure}[h!]
@@ -231,7 +231,7 @@ constant due to excessive congestion. Such variable has to be adapted to
 different networks. Bigger values (in the order of $10^5$) are better suited
 for slow networks with longer RTTs. Smaller values instead (e.g.\ the default
 128) are better suited for fast networks with RTT of about 1 ms. \\
-The goodput at the Receiver over time is in figures~\ref{fig:goodput_200} and~\ref{fig:goodput_500}. They show the number of useful bits received every 500 ms, normalized to this sampling time, for a 200 MB file and 500 MB transmission. Both the figures show a common trend, with high goodput at the beginning, which decreases once transmission is almost completed, because of the retransmission mechanism and the long delays for the ACKs in the TC. The sudden drops of the goodput, instead, signal that congestion control mechanism has kicked in.\\
+The goodput at the Receiver over time is in Figures~\ref{fig:goodput_200} and~\ref{fig:goodput_500}. They show the number of useful bits received every 500 ms, normalized to this sampling time, for a 200 MB file and 500 MB transmission. Both the figures show a common trend, with high goodput at the beginning, which decreases once transmission is almost completed, because of the retransmission mechanism and the long delays for the ACKs in the TC. The sudden drops of the goodput, instead, signal that congestion control mechanism has kicked in.\\
 
 \begin{figure}[h]
   \centering
@@ -248,5 +248,5 @@ The goodput at the Receiver over time is in figures~\ref{fig:goodput_200} and~\r
 \end{figure}
 
 \section{Conclusions}
-The HIPSTER protocol was designed in order to work upon networks with high rtt and high packet loss. Given the model of the HIPSTER sender, receiver and TC, we developed a theoretical analysis in order to tune packet length. The implementation of the TC was tested and performed as expected. Finally, tests with files of different sizes showed that the protocol can reach high goodput and low transfer time.
+The HIPSTER protocol was designed in order to work upon networks with high round trip time and packet loss. Given the model of the HIPSTER sender, receiver and TC, we developed a theoretical analysis in order to tune packet length. The implementation of the TC was tested and performed as expected. Finally, tests with files of different sizes showed that the protocol can reach high goodput and low transfer time.
 \end{document}

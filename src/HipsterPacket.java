@@ -197,8 +197,8 @@ public class HipsterPacket {
 	/**
 	* Returns a DatagramPacket with a correctly formatted header and
 	* the payload of this HipsterPacket.
-	* 
-	* NOTE: no destination address or port will be set. It has to be 
+	*
+	* NOTE: no destination address or port will be set. It has to be
 	* specified manually later.
 	*/
 	public DatagramPacket toDatagram() {
@@ -206,7 +206,7 @@ public class HipsterPacket {
 		//First headerLength bytes are the header
 		System.arraycopy(this.getHeader(), 0, buffer, 0, headerLength);
 
-		if (dataLength > 0) // there's no point in copying a payload that 
+		if (dataLength > 0) // there's no point in copying a payload that
 		{                   // does not exist.
 			//In bytes from headerLength to dataLength + headerLength there's the payload
 			System.arraycopy(payload, 0, buffer, headerLength, dataLength);
