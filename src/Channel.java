@@ -12,7 +12,7 @@ import java.util.concurrent.*;
 public class Channel {
 
   //port numbers
-  public static final int zanellaPort = 65432;
+  public static final int standardPort = 65432;
   public static final int forwardPort = 50000;
 
   //parameters tuned with "rule of thumb"
@@ -43,8 +43,6 @@ public class Channel {
   public static void main(String[] args) {
     try {
 
-      System.out.println("Butterhand Channel started - ready to receive and forward");
-
       // Parse command line arguments
       for(int i = 0; i < args.length; i++)
       {
@@ -66,11 +64,13 @@ public class Channel {
       }
 
       //create the listening and forwarding sockets
-      DatagramSocket listenSocket = new DatagramSocket(zanellaPort);
+      DatagramSocket listenSocket = new DatagramSocket(standardPort);
       DatagramSocket forwardSocket = new DatagramSocket(forwardPort);
 
       //create the ThreadPool
       ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(NUMBER_THREADS);
+
+      System.out.println("Butterhand Channel started - ready to receive and forward");
 
       //receive Datagrams and perform the required tasks
       while(true) {
@@ -87,9 +87,9 @@ public class Channel {
 
 
   /**
-  * Constructor
+  * Public constructor
   */
-  Channel(DatagramSocket listen, DatagramSocket forward, ScheduledExecutorService scheduledThreadPool)
+  public Channel(DatagramSocket listen, DatagramSocket forward, ScheduledExecutorService scheduledThreadPool)
   {
     listenSock = listen;
     forwardSock = forward;
@@ -138,7 +138,7 @@ public class Channel {
         //compute random delay
         int delay = 0;
         if(!noDelay) {
-          delay = (int) randExpDl(usefulLength); //the delay is approximated to its floor
+          delay = (int) randExpDl(usefulLength); //the delay in ms is approximated to its floor
         }
 
         //schedule the forwarding of a packet
@@ -174,6 +174,8 @@ public class Channel {
   * Computes the random waiting time for each packet to be forwarded,
   * as specified here
   * https://github.com/DvdMgr/HIPSTER/blob/master/Documentation/HW3-Protocol-design.pdf
+  * Param
+  * length is the length in byte of the UDP packet
   */
   private double randExpDl(int length) {
     double mean_rand_dl = 1024/Math.log(length);
@@ -185,6 +187,8 @@ public class Channel {
   * Computes the probability of dropping a packet, as specified here
   * https://github.com/DvdMgr/HIPSTER/blob/master/Documentation/HW3-Protocol-design.pdf
   * Returns true if the packet is dropped
+  * Param
+  * length is the length in byte of the UDP packet
   */
   private boolean isDropped(int length) {
     double pLoss = 1 - Math.exp(-((double)length / 1024));
@@ -206,6 +210,7 @@ class Forwarder implements Runnable {
 
   /**
   * Constructor which initializes a Forwarder object
+  * The packet should contain the correct forwarding IP address and port number
   */
   Forwarder(DatagramPacket pck, DatagramSocket sock) {
     toBeForwarded = pck;
