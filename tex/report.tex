@@ -11,7 +11,7 @@
 \usepackage[cmex10]{amsmath}
 % Also, note that the amsmath package sets \interdisplaylinepenalty to 10000
 % thus preventing page breaks from occurring within multiline equations. Use:
- \interdisplaylinepenalty=2500
+\interdisplaylinepenalty=2500
 % after loading amsmath to restore such page breaks as IEEEtran.cls normally does.
 \usepackage[utf8]{inputenc}
 % Useful for dispalying quotations
@@ -95,13 +95,30 @@
 In this paper we will describe the HIPSTER protocol, a file transfer protocol designed to work on top of the UDP transport layer. The aim of the protocol is to minimize transfer time over an unreliable Transport Channel (TC), which introduces delay and drops packet according to a certain model. In the first section, the protocol will be described. Then, we will show the results of some tests for the TC, demonstrating that it works as specified by the model. In the last section test results will be presented and we will show that the system reaches low transfer times.
 
 \section{Protocol description}
+The packet structure has been designed in order to add the minimum overhead,
+while providing all the functionality needed by the protocol.
 
-Define DR, DS, TC\\
+Destination IP and port are needed for packet forwarding within the channel
+and by the receiver for replying to the sender. The first two fields are the
+same within different groups. Moreover the size of the payload was included to 
+ease the parsing of the packet at the receiving side. Finally \texttt{CODE} and
+\texttt{SEQUENCE NUMBER} are used for signalling and error recovery.
+
+The following values are used for the code:
+\begin{compactitem}
+\item 0 means a regular data packet
+\item 1 carries an ACK, the sequence number received is the same as the packet
+	being ACKed and no payload
+\item 2 signals the end of transmission (ETX). It is issued by the sender and
+	ACKed by the receiver
+\end{compactitem}
+
+Before the actual implementation a theoretical model of the protocol and the
+channel was developed. Such model showed that the optimal packet length to
+minimize the transfer time is around 1000 byte so this protocol uses fixed-size
+packets whose payload length is 1000 byte.
 
 The Receiver is in charge of handling ACK transmission and the reordering of the received packets. The protocol assumes the random delays and drops introduced by the channel would make in-order delivery extremely slow, so the decision of shifting the burden of reordering on the receiver was made. The Receiver listens continuously for new packets. Once it receives a packet, it checks its CODE. If the CODE is DATA, the DR stores the packet in a list and sends an ACK to the Sender through the Channel. In the case the received packet contains an ETX (end of transmission) code, the Receiver acknowledges it, then proceeds to reorder the packets and finally writes the received file to disk. The ACKs crafted by the Receiver contain an empty payload in order to minimize the channel drop probability, and the sequence number refers to the single packet the Receiver intends to acknowledge, in order to inform the Sender that retransmission of that portion is not necessary.
-
-Compare HIPSTER with stop and wait and with a simple delay between packets.\\
-Tell them we tried to use the delay before the poor man's sliding window.
 
 \begin{figure}[htp]
   \centering
@@ -123,28 +140,6 @@ Tell them we tried to use the delay before the poor man's sliding window.
 	\caption{HIPSTER packet structure}
 	\label{fig:header}
 \end{figure}
-The packet structure has been designed in order to add the minimum overhead,
-while providing all the functionality needed by the protocol.
-
-Destination IP and port are needed for packet forwarding within the channel
-and by the receiver for replying to the sender. Moreover the size of the
-payload was included to ease the parsing of the packet at the receiving side.
-Finally \texttt{CODE} and \texttt{SEQUENCE NUMBER} are used for signalling
-and error recovery.
-
-The following values are used for the code:
-\begin{compactitem}
-\item 0 means a regular data packet
-\item 1 carries an ACK, the sequence number received is the same as the packet
-	being ACKed and no payload
-\item 2 signals the end of transmission (ETX). It is issued by the sender and
-	ACKed by the receiver
-\end{compactitem}
-
-Packet length is set to 1000 byte, because the theoretical model developed to describe HIPSTER protocol with the assigned Transport Channel (TC) showed a minimum for transfer time with packets of 1000 byte. \\
-
-
-
 
 \section{Transport Channel test results}
 The Transport Channel (TC) module simulates a bad channel among the DS and DR. It drops received UDP packets of length $L$ with probability $P_{drop} = 1 - \exp(-L/1024)$ and forwards the remaining ones with a delay distribuited according to an expontial random variable with mean $1024/\ln(L)$ ms. \\
@@ -175,7 +170,8 @@ The TC was tested in loopback, by measuring the delay between the transmission o
 \section{HIPSTER protocol test results}
 The transfer rate for files with different sizes was analyzed. The
 table~\ref{table:ourChannel} summarizes the mean over five runs for the transfer time and speed for
-\texttt{localhost}, while the table~\ref{table:anotherChannel} reports the results of the same tests with another channel. \textit{Mean time} is the time from the beginning of the transmission at the Sender to the reception of the ACK for the ETX packet, while \textit{mean goodput} is file size over \textit{mean time}.
+\texttt{localhost}, while the table~\ref{table:anotherChannel} reports the
+results of the same tests with another channel, borrowed from a different group. \textit{Mean time} is the time from the beginning of the transmission at the Sender to the reception of the ACK for the ETX packet, while \textit{mean goodput} is file size over \textit{mean time}.
 \begin{table}[h]
 \centering
 \begin{tabular}{|c|c|c|}
@@ -231,5 +227,4 @@ The goodput at the Receiver over time is in figures~\ref{fig:goodput_200} and~\r
 
 \section{Concusions}
 The HIPSTER protocol was designed in order to work upon networks with high rtt and high packet loss. Given the model of HIPSTER sender, receiver and TC, we developed a theoretical analysis in order to tune packet length. The implementation of the TC was tested and performed as expected. Finally, tests with files of different sizes showed that the protocol can reach high goodput and low transfer time.
-O RLY? YUP!
 \end{document}
