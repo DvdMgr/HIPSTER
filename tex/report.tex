@@ -95,6 +95,13 @@
 In this paper we will describe the HIPSTER protocol, a file transfer protocol designed to work on top of the UDP transport layer. The aim of the protocol is to minimize transfer time over an unreliable Transport Channel (TC), which introduces delay and drops packet according to a certain model. In the first section, the protocol will be described. Then, we will show the results of some tests for the TC, demonstrating that it works as specified by the model. In the last section test results will be presented and we will show that the system reaches low transfer times.
 
 \section{Protocol description}
+\begin{figure}[htp]
+	\centering
+	\includegraphics[width=0.95\columnwidth]{tex/images/packet_structure.pdf}
+	\caption{HIPSTER packet structure}
+	\label{fig:header}
+\end{figure}
+
 The packet structure has been designed in order to add the minimum overhead,
 while providing all the functionality needed by the protocol.
 
@@ -118,23 +125,41 @@ channel was developed. Such model showed that the optimal packet length to
 minimize the transfer time is around 1000 byte so this protocol uses fixed-size
 packets whose payload length is 1000 byte.
 
+The behaviour of the sender (DS) is depicted in Figure~\ref{fig:senderFlow}.
+It is organized into two threads: ListenerThread which receives, decodes and
+enqueues ACKs and SendThread that is in charge of sending all packets
+successfully and performing some basic congestion control using the enqueued
+ACKs.
+\begin{figure}[htp]
+	\centering
+	\includegraphics[height=0.75\textheight]{Documentation/Sender.pdf}
+	\caption{HIPSTER protocol DS}
+	\label{fig:senderFlow}
+\end{figure}
+
+Basically the \texttt{inFlight} counter in SendThread is increased every time
+a packet is sent and decreased when an ACK is received. DS sends packets
+continuously until \texttt{inFlight} has reached the maximum allowed window.
+When the window is full the sender won't send packets continuously but will
+send a packet every time an ACK is received. The \texttt{blocked} counter is
+used to avoid deadlocks in case some ACKs are lost: it sets a maximum delay 
+before a packet is sent regardless of the received ACK.
+Every time an ACK is dequeued the corresponding packet is removed from the
+list of packets. Only when the list is empty the transmission is considered
+complete. At this time DS sends the ETX packet which signals to the receiver 
+that the transmission is over. If the corresponding ACK is received the sender
+will exit otherwhise if a $2.5s$ timer expires the ETX is sent again.
+
 The Receiver is in charge of handling ACK transmission and the reordering of the received packets. The protocol assumes the random delays and drops introduced by the channel would make in-order delivery extremely slow, so the decision of shifting the burden of reordering on the receiver was made. The Receiver listens continuously for new packets. Once it receives a packet, it checks its CODE. If the CODE is DATA, the DR stores the packet in a list and sends an ACK to the Sender through the Channel. In the case the received packet contains an ETX (end of transmission) code, the Receiver acknowledges it, then proceeds to reorder the packets and finally writes the received file to disk. The ACKs crafted by the Receiver contain an empty payload in order to minimize the channel drop probability, and the sequence number refers to the single packet the Receiver intends to acknowledge, in order to inform the Sender that retransmission of that portion is not necessary.
 
-\begin{figure}[htp]
+\begin{figure}[h]
   \centering
   \includegraphics[width=0.75\columnwidth, keepaspectratio]{Documentation/Receiver.pdf}
   \caption{HIPSTER protocol DR}
   \label{fig:receiverFlowchart}
 \end{figure}
 
-\begin{figure}[htp]
-  \centering
-  \includegraphics[width=0.75\columnwidth, keepaspectratio]{Documentation/Sender.pdf}
-  \caption{HIPSTER protocol DS}
-  \label{fig:senderFlowchart}
-\end{figure}
-
-\begin{figure}[htp]
+\begin{figure}[h]
 	\centering
     \includegraphics[width=0.95\columnwidth]{tex/images/packet_structure.pdf}
 	\caption{HIPSTER packet structure}
@@ -211,14 +236,14 @@ for slow networks with longer RTTs. Smaller values instead (e.g.\ the default
 128) are better suited to fast networks with RTT of about 1 ms. \\
 The goodput at the Receiver over time is in figures~\ref{fig:goodput_200} and~\ref{fig:goodput_500}. They show the number of useful bit received every 500 ms, normalized to this sampling time, for a 200 MB file and 500 MB transmission. Both the figures show a common trend, with high goodput at the beginning which decreases once transmission is almost completed, because of retransmission mechanism and long delays for the ACKs in the TC. The sudden drops of the goodput, instead, signal that congestion control mechanism has kicked in.\\
 
-\begin{figure}[htp]
+\begin{figure}[h]
   \centering
   \includegraphics[width = 0.95\columnwidth, keepaspectratio]{tex/images/goodput_c2_200.pdf}
   \caption{Goodput at the receiver, file size 200 MB}
   \label{fig:goodput_200}
 \end{figure}
 
-\begin{figure}[htp]
+\begin{figure}[h]
   \centering
   \includegraphics[width = 0.95\columnwidth, keepaspectratio]{tex/images/goodput_c1_500.pdf}
   \caption{Goodput at the receiver, file size 500 MB}
