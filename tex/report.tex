@@ -159,13 +159,6 @@ The Receiver is in charge of handling ACK transmission and the reordering of the
   \label{fig:receiverFlowchart}
 \end{figure}
 
-\begin{figure}[h]
-	\centering
-    \includegraphics[width=0.95\columnwidth]{tex/images/packet_structure.pdf}
-	\caption{HIPSTER packet structure}
-	\label{fig:header}
-\end{figure}
-
 \section{Transport Channel test results}
 The Transport Channel (TC) module simulates a bad channel among the DS and DR. It drops received UDP packets of length $L$ with probability $P_{drop} = 1 - \exp(-L/1024)$ and forwards the remaining ones with a delay distribuited according to an expontial random variable with mean $1024/\ln(L)$ ms. \\
 The TC was tested in loopback, by measuring the delay between the transmission of a packet by DS and its reception at DR and the ratio between sent and received packets. The payload of UDP packet used in this test is in the range from 12 byte (HIPSTER header length, thus the size of an ACK) to 1012 byte (actual size of HIPSTER packets). Each measurement was taken 10 times. The results are in figures~\ref{fig:pDrop} and~\ref{fig:delay}. The TC follows accurately the theoretical model, the few discrepancies are related to the Java random number generator and the finiteness of measurements. The distribution of the delays introduced by the TC in a transmission fits the required exponential RV according to the Kolmogorov-Smirnov test and the comparison of the cumulative distributive functions (CDF) of the two can be seen in figure~\ref{fig:CDF}.
