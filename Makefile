@@ -15,5 +15,6 @@ receiver: src/Receiver.java src/HipsterPacket.java
 
 report: tex/report.tex
 	@pdflatex $?
+	@pdflatex $?
 clean:
 	@rm -f *.class *.pdf *.log *.aux
